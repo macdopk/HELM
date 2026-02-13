@@ -1,0 +1,2939 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚓ HELM - Navigate memecoin chaos</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --accent: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --purple: #a855f7;
+            --gold: #fbbf24;
+            --border: rgba(148, 163, 184, 0.2);
+        }
+        
+        body.light-theme {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-hover: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border: rgba(0,0,0,0.1);
+        }
+        
+        body.neon-theme {
+            --bg-primary: #0a0014;
+            --bg-secondary: #1a0033;
+            --bg-card: #2d1b4e;
+            --bg-hover: #3d2b5e;
+            --text-primary: #ffffff;
+            --text-secondary: #e9d5ff;
+            --accent: #ff00ff;
+            --success: #00ff88;
+            --danger: #ff0066;
+            --warning: #ffcc00;
+            --border: rgba(255,0,255,0.3);
+        }
+
+        body {
+            font-family: -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes levelUp {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        @keyframes badgeUnlock {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(10deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        
+        .fade-in { animation: fadeIn 0.3s ease; }
+        .slide-in { animation: slideIn 0.3s ease; }
+        .level-up { animation: levelUp 0.5s ease; }
+        .badge-unlock { animation: badgeUnlock 0.6s ease; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        .header {
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--accent);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .logo { 
+            font-size: 2rem; 
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--accent), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .tagline { color: var(--text-secondary); font-size: 0.9rem; }
+        
+        .card {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+
+        button {
+            padding: 12px 24px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.2s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        
+        button.success { background: var(--success); }
+        button.danger { background: var(--danger); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+        
+        .loading { animation: pulse 1.5s ease-in-out infinite; }
+        .spinner { display: inline-block; animation: spin 1s linear infinite; }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            margin: 10px 0;
+            transition: all 0.2s ease;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+        
+        .tab:hover { background: var(--bg-hover); transform: translateY(-2px); }
+        .tab.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: var(--bg-primary);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .stat-value { font-size: 2rem; font-weight: bold; color: var(--accent); margin-bottom: 5px; }
+        .stat-label { color: var(--text-secondary); font-size: 0.9rem; }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+            background: var(--bg-primary);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 16px 24px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+            min-width: 300px;
+        }
+        
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--danger); }
+        .toast.warning { border-left: 4px solid var(--warning); }
+        
+        /* GAMIFICATION STYLES */
+        .xp-bar-container {
+            width: 100%;
+            height: 20px;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin: 10px 0;
+        }
+        
+        .xp-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--purple));
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .level-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--purple), var(--accent));
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        
+        .badge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .badge-item {
+            background: var(--bg-primary);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        
+        .badge-item.unlocked {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+        }
+        
+        .badge-item.locked {
+            opacity: 0.4;
+            filter: grayscale(1);
+        }
+        
+        .badge-item:hover {
+            transform: scale(1.05);
+        }
+        
+        .badge-icon {
+            font-size: 3rem;
+            margin-bottom: 8px;
+        }
+        
+        .badge-name {
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        
+        .badge-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        .streak-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .xp-gain-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid var(--gold);
+            box-shadow: 0 0 40px rgba(251, 191, 36, 0.5);
+            z-index: 10001;
+            animation: levelUp 0.5s ease;
+            text-align: center;
+        }
+        
+        .theme-selector {
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .theme-selector:hover { background: var(--bg-hover); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // GAMIFICATION CONSTANTS
+        const XP_TYPES = {
+            HOT_STREAK_3: 200,
+            HOT_STREAK_5: 500,
+            HOT_STREAK_10: 1000,
+        };
+
+        // XP calculado pelo P&L — quanto maior lucro, mais XP; prejuízo perde XP
+        const calcXPFromPnL = (pnlSOL) => {
+            if (pnlSOL > 0) {
+                if (pnlSOL >= 5.0) return 500;
+                if (pnlSOL >= 2.0) return 300;
+                if (pnlSOL >= 1.0) return 150;
+                if (pnlSOL >= 0.5) return 75;
+                if (pnlSOL >= 0.1) return 25;
+                return 10;
+            } else if (pnlSOL < 0) {
+                const loss = Math.abs(pnlSOL);
+                if (loss >= 5.0) return -500;
+                if (loss >= 2.0) return -300;
+                if (loss >= 1.0) return -150;
+                if (loss >= 0.5) return -75;
+                if (loss >= 0.1) return -25;
+                return -10;
+            }
+            return 0;
+        };
+
+        const ALL_BADGES = {
+            first_trade: { icon: '🎯', name: 'First Trade', desc: 'Made first trade' },
+            first_profit: { icon: '💰', name: 'First Win', desc: 'First profitable trade' },
+            hot_streak_3: { icon: '🔥', name: 'Hat Trick', desc: '3 wins in a row' },
+            hot_streak_5: { icon: '🔥🔥', name: 'On Fire', desc: '5 wins in a row' },
+            hot_streak_10: { icon: '🔥🔥🔥', name: 'Unstoppable', desc: '10 wins in a row!' },
+            win_rate_50: { icon: '🥉', name: 'Bronze', desc: '50% win rate (10+ trades)' },
+            win_rate_60: { icon: '🥈', name: 'Silver', desc: '60% win rate (10+ trades)' },
+            win_rate_70: { icon: '🥇', name: 'Gold', desc: '70% win rate (10+ trades)' },
+            win_rate_80: { icon: '💎', name: 'Diamond', desc: '80% win rate (10+ trades)' },
+            analyst: { icon: '🔍', name: 'Analyst', desc: '10+ tokens analyzed' },
+            trader_10: { icon: '📊', name: 'Active', desc: '10 total trades' },
+            trader_50: { icon: '📈', name: 'Experienced', desc: '50 total trades' },
+            trader_100: { icon: '🚀', name: 'Pro', desc: '100 total trades' },
+        };
+
+        const LEVELS = [
+            { level: 1, xp: 0, name: 'Newbie', icon: '🌱' },
+            { level: 2, xp: 100, name: 'Beginner', icon: '📚' },
+            { level: 3, xp: 300, name: 'Learning', icon: '🎯' },
+            { level: 4, xp: 600, name: 'Trader', icon: '📊' },
+            { level: 5, xp: 1000, name: 'Skilled', icon: '💪' },
+            { level: 6, xp: 1500, name: 'Advanced', icon: '🔥' },
+            { level: 7, xp: 2200, name: 'Expert', icon: '⚡' },
+            { level: 8, xp: 3000, name: 'Pro', icon: '💎' },
+            { level: 9, xp: 4000, name: 'Master', icon: '👑' },
+            { level: 10, xp: 5500, name: 'Legend', icon: '🏆' },
+        ];
+
+        // Toast Component
+        function Toast({ message, type = 'success', onClose }) {
+            useEffect(() => {
+                const timer = setTimeout(onClose, 3000);
+                return () => clearTimeout(timer);
+            }, []);
+
+            return (
+                <div className={`toast ${type}`}>
+                    {type === 'success' && '✅ '}
+                    {type === 'error' && '❌ '}
+                    {type === 'warning' && '⚠️ '}
+                    {message}
+                </div>
+            );
+        }
+        
+        // XP Gain Popup
+        function XPGainPopup({ xp, reason, onClose }) {
+            useEffect(() => {
+                const timer = setTimeout(onClose, 2000);
+                return () => clearTimeout(timer);
+            }, []);
+            
+            const isLoss = xp < 0;
+            return (
+                <div className="xp-gain-popup" style={{borderColor: isLoss ? 'var(--danger)' : 'var(--gold)', boxShadow: isLoss ? '0 0 40px rgba(239,68,68,0.4)' : '0 0 40px rgba(251,191,36,0.5)'}}>
+                    <div style={{fontSize: '3rem', marginBottom: '10px'}}>{isLoss ? '💔' : '✨'}</div>
+                    <div style={{fontSize: '2rem', fontWeight: 'bold', color: isLoss ? 'var(--danger)' : 'var(--gold)', marginBottom: '5px'}}>
+                        {isLoss ? '' : '+'}{xp} XP
+                    </div>
+                    <div style={{color: 'var(--text-secondary)'}}>{reason}</div>
+                </div>
+            );
+        }
+
+        function ApeModal({ analysis, balance, onConfirm, onClose }) {
+            const [amt, setAmt] = React.useState('0.1');
+            const [reason, setReason] = React.useState('');
+            const REASONS = [
+                { id:'FOMO',      label:'🔥 FOMO'             },
+                { id:'KOL',       label:'📢 KOL COMPRANDO'    },
+                { id:'DEV',       label:'🛠️ DEV CONFIÁVEL'    },
+                { id:'COMMUNITY', label:'💪 COMUNIDADE FORTE' },
+            ];
+            return (
+                <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}} onClick={onClose}>
+                    <div style={{background:'var(--bg-card)',borderRadius:'16px',padding:'28px',maxWidth:'420px',width:'100%',border:'1px solid var(--border)',boxShadow:'0 20px 60px rgba(0,0,0,0.5)'}} onClick={e=>e.stopPropagation()}>
+                        <h3 style={{marginBottom:'4px'}}>🚀 APE em {analysis?.symbol}</h3>
+                        <p style={{color:'var(--text-secondary)',fontSize:'0.85rem',marginBottom:'20px'}}>Saldo disponível: <strong>{balance.toFixed(2)} SOL</strong></p>
+
+                        <label style={{display:'block',marginBottom:'6px',fontWeight:'bold',fontSize:'0.9rem'}}>Quantidade (SOL)</label>
+                        <div style={{display:'flex',gap:'8px',marginBottom:'12px'}}>
+                            {['0.05','0.1','0.25','0.5'].map(v=>(
+                                <button key={v} onClick={()=>setAmt(v)} style={{
+                                    flex:1,margin:0,padding:'8px 4px',fontSize:'0.82rem',
+                                    background:amt===v?'var(--accent)':'var(--bg-primary)',
+                                    border:`1px solid ${amt===v?'var(--accent)':'var(--border)'}`,
+                                    color:amt===v?'white':'var(--text-secondary)',borderRadius:'6px',cursor:'pointer'
+                                }}>{v}</button>
+                            ))}
+                        </div>
+                        <input value={amt} onChange={e=>setAmt(e.target.value)} type="number" step="0.01" min="0.01" style={{marginBottom:'20px'}} />
+
+                        <label style={{display:'block',marginBottom:'10px',fontWeight:'bold',fontSize:'0.9rem'}}>Por que você está comprando?</label>
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px',marginBottom:'20px'}}>
+                            {REASONS.map(r=>(
+                                <div key={r.id} onClick={()=>setReason(r.id)} style={{
+                                    padding:'12px',borderRadius:'10px',cursor:'pointer',transition:'all 0.15s',
+                                    textAlign:'center', fontWeight:'bold', fontSize:'0.9rem',
+                                    border:`2px solid ${reason===r.id?'var(--accent)':'var(--border)'}`,
+                                    background:reason===r.id?'rgba(59,130,246,0.15)':'var(--bg-primary)',
+                                    color:reason===r.id?'var(--accent)':'var(--text-primary)'
+                                }}>
+                                    {r.label}
+                                </div>
+                            ))}
+                        </div>
+
+                        <div style={{display:'flex',gap:'10px'}}>
+                            <button onClick={onClose} style={{flex:1,margin:0}}>Cancelar</button>
+                            <button onClick={()=>reason && onConfirm(parseFloat(amt),reason)} className="success"
+                                style={{flex:2,margin:0,fontSize:'1rem',letterSpacing:'1px',opacity:reason?1:0.5,cursor:reason?'pointer':'not-allowed'}}>
+                                🚀 APE
+                            </button>
+                        </div>
+                        {!reason && <p style={{color:'var(--warning)',fontSize:'0.78rem',textAlign:'center',marginTop:'8px'}}>Selecione um motivo para continuar</p>}
+                    </div>
+                </div>
+            );
+        }
+
+        function DCAModal({ trade, balance, onConfirm, onClose }) {
+            const [amt, setAmt] = React.useState('0.1');
+            return (
+                <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}} onClick={onClose}>
+                    <div style={{background:'var(--bg-card)',borderRadius:'16px',padding:'28px',maxWidth:'380px',width:'100%',border:'1px solid var(--border)',boxShadow:'0 20px 60px rgba(0,0,0,0.5)'}} onClick={e=>e.stopPropagation()}>
+                        <h3 style={{marginBottom:'6px'}}>📉 DCA — {trade.tokenSymbol}</h3>
+                        <p style={{color:'var(--text-secondary)',fontSize:'0.85rem',marginBottom:'4px'}}>Preço médio: <strong>${trade.avgEntryPrice.toFixed(8)}</strong></p>
+                        <p style={{color:'var(--text-secondary)',fontSize:'0.85rem',marginBottom:'20px'}}>Saldo: <strong>{balance.toFixed(2)} SOL</strong></p>
+
+                        <label style={{display:'block',marginBottom:'8px',fontWeight:'bold',fontSize:'0.9rem'}}>Adicionar (SOL)</label>
+                        <div style={{display:'flex',gap:'8px',marginBottom:'12px'}}>
+                            {['0.05','0.1','0.25','0.5'].map(v=>(
+                                <button key={v} onClick={()=>setAmt(v)} style={{
+                                    flex:1,margin:0,padding:'8px 4px',fontSize:'0.82rem',
+                                    background:amt===v?'var(--accent)':'var(--bg-primary)',
+                                    border:`1px solid ${amt===v?'var(--accent)':'var(--border)'}`,
+                                    color:amt===v?'white':'var(--text-secondary)',borderRadius:'6px',cursor:'pointer'
+                                }}>{v}</button>
+                            ))}
+                        </div>
+                        <input value={amt} onChange={e=>setAmt(e.target.value)} type="number" step="0.01" min="0.01" style={{marginBottom:'20px'}} />
+
+                        <div style={{display:'flex',gap:'10px'}}>
+                            <button onClick={onClose} style={{flex:1,margin:0}}>Cancelar</button>
+                            <button onClick={()=>onConfirm(parseFloat(amt),trade)} className="success" style={{flex:2,margin:0}}>📉 Confirmar DCA</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function PartialModal({ trade, onConfirm, onClose }) {
+            const [pct, setPct] = React.useState('50');
+            const [sellReason, setSellReason] = React.useState('');
+            const solAmt = ((trade.totalInvested * (parseFloat(pct)||0)) / 100).toFixed(3);
+            const SELL_REASONS = [
+                { id:'TARGET',    label:'🎯 META DE LUCRO ATINGIDA' },
+                { id:'STOPLOSS',  label:'🛑 STOP LOSS'              },
+            ];
+            return (
+                <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}} onClick={onClose}>
+                    <div style={{background:'var(--bg-card)',borderRadius:'16px',padding:'28px',maxWidth:'380px',width:'100%',border:'1px solid var(--border)',boxShadow:'0 20px 60px rgba(0,0,0,0.5)'}} onClick={e=>e.stopPropagation()}>
+                        <h3 style={{marginBottom:'6px'}}>📊 Venda Parcial — {trade.tokenSymbol}</h3>
+                        <p style={{color:'var(--text-secondary)',fontSize:'0.85rem',marginBottom:'20px'}}>Posição: <strong>{trade.totalInvested.toFixed(3)} SOL</strong></p>
+
+                        <label style={{display:'block',marginBottom:'8px',fontWeight:'bold',fontSize:'0.9rem'}}>Quanto vender?</label>
+                        <div style={{display:'flex',gap:'8px',marginBottom:'12px',flexWrap:'wrap'}}>
+                            {['25','50','75','100'].map(v=>(
+                                <button key={v} onClick={()=>setPct(v)} style={{
+                                    flex:1,minWidth:'50px',margin:0,padding:'10px 4px',fontSize:'0.9rem',fontWeight:'bold',
+                                    background:pct===v?'var(--warning)':'var(--bg-primary)',
+                                    border:`1px solid ${pct===v?'var(--warning)':'var(--border)'}`,
+                                    color:pct===v?'#0f172a':'var(--text-secondary)',borderRadius:'6px',cursor:'pointer'
+                                }}>{v}%</button>
+                            ))}
+                        </div>
+                        <input value={pct} onChange={e=>setPct(e.target.value)} type="number" step="1" min="1" max="100" style={{marginBottom:'8px'}} />
+                        <p style={{color:'var(--text-secondary)',fontSize:'0.82rem',marginBottom:'20px'}}>= <strong>{solAmt} SOL</strong> da posição</p>
+
+                        <label style={{display:'block',marginBottom:'10px',fontWeight:'bold',fontSize:'0.9rem'}}>Por que está vendendo?</label>
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px',marginBottom:'20px'}}>
+                            {SELL_REASONS.map(r=>(
+                                <div key={r.id} onClick={()=>setSellReason(r.id)} style={{
+                                    padding:'12px',borderRadius:'10px',cursor:'pointer',transition:'all 0.15s',
+                                    textAlign:'center',fontWeight:'bold',fontSize:'0.85rem',
+                                    border:`2px solid ${sellReason===r.id?'var(--warning)':'var(--border)'}`,
+                                    background:sellReason===r.id?'rgba(245,158,11,0.15)':'var(--bg-primary)',
+                                    color:sellReason===r.id?'var(--warning)':'var(--text-primary)'
+                                }}>{r.label}</div>
+                            ))}
+                        </div>
+
+                        <div style={{display:'flex',gap:'10px'}}>
+                            <button onClick={onClose} style={{flex:1,margin:0}}>Cancelar</button>
+                            <button onClick={()=>sellReason && onConfirm(parseFloat(pct),trade,sellReason)} className="warning"
+                                style={{flex:2,margin:0,opacity:sellReason?1:0.5,cursor:sellReason?'pointer':'not-allowed'}}>
+                                📊 Confirmar Venda
+                            </button>
+                        </div>
+                        {!sellReason && <p style={{color:'var(--warning)',fontSize:'0.78rem',textAlign:'center',marginTop:'8px'}}>Selecione o motivo para continuar</p>}
+                    </div>
+                </div>
+            );
+        }
+
+        function CloseModal({ trade, onConfirm, onClose }) {
+            const [sellReason, setSellReason] = React.useState('');
+            const SELL_REASONS = [
+                { id:'TARGET',    label:'🎯 META DE LUCRO ATINGIDA' },
+                { id:'STOPLOSS',  label:'🛑 STOP LOSS'              },
+            ];
+            return (
+                <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}} onClick={onClose}>
+                    <div style={{background:'var(--bg-card)',borderRadius:'16px',padding:'28px',maxWidth:'360px',width:'100%',border:'1px solid var(--border)',boxShadow:'0 20px 60px rgba(0,0,0,0.5)'}} onClick={e=>e.stopPropagation()}>
+                        <h3 style={{marginBottom:'6px'}}>💰 Fechar Posição — {trade.tokenSymbol}</h3>
+                        <p style={{color:'var(--text-secondary)',fontSize:'0.85rem',marginBottom:'20px'}}>
+                            Posição completa: <strong>{trade.totalInvested.toFixed(3)} SOL</strong>
+                        </p>
+
+                        <label style={{display:'block',marginBottom:'10px',fontWeight:'bold',fontSize:'0.9rem'}}>Por que está saindo?</label>
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px',marginBottom:'24px'}}>
+                            {SELL_REASONS.map(r=>(
+                                <div key={r.id} onClick={()=>setSellReason(r.id)} style={{
+                                    padding:'14px 10px',borderRadius:'10px',cursor:'pointer',transition:'all 0.15s',
+                                    textAlign:'center',fontWeight:'bold',fontSize:'0.88rem',
+                                    border:`2px solid ${sellReason===r.id?'var(--danger)':'var(--border)'}`,
+                                    background:sellReason===r.id?'rgba(239,68,68,0.15)':'var(--bg-primary)',
+                                    color:sellReason===r.id?'var(--danger)':'var(--text-primary)'
+                                }}>{r.label}</div>
+                            ))}
+                        </div>
+
+                        <div style={{display:'flex',gap:'10px'}}>
+                            <button onClick={onClose} style={{flex:1,margin:0}}>Cancelar</button>
+                            <button onClick={()=>sellReason && onConfirm(trade.id, sellReason)} className="danger"
+                                style={{flex:2,margin:0,opacity:sellReason?1:0.5,cursor:sellReason?'pointer':'not-allowed'}}>
+                                💰 Fechar Posição
+                            </button>
+                        </div>
+                        {!sellReason && <p style={{color:'var(--warning)',fontSize:'0.78rem',textAlign:'center',marginTop:'8px'}}>Selecione o motivo para continuar</p>}
+                    </div>
+                </div>
+            );
+        }
+
+        function TradeInfoModal({ trade, onClose }) {
+            const cp = trade.currentPrice || trade.avgEntryPrice;
+            const pc = ((cp - trade.avgEntryPrice) / trade.avgEntryPrice) * 100;
+            const pPnl = (trade.partialExits||[]).reduce((s,e)=>s+e.pnl,0);
+            const uPnl = trade.totalInvested * (pc/100);
+            const tPnl = pPnl + uPnl;
+            return (
+                <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}} onClick={onClose}>
+                    <div style={{background:'var(--bg-card)',borderRadius:'16px',padding:'24px',maxWidth:'440px',width:'100%',border:'1px solid var(--border)',maxHeight:'85vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,0.5)'}} onClick={e=>e.stopPropagation()}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'16px'}}>
+                            <div>
+                                <h3 style={{fontSize:'1.3rem'}}>{trade.tokenSymbol}</h3>
+                                <p style={{color:'var(--text-secondary)',fontSize:'0.85rem'}}>{trade.tokenName}</p>
+                            </div>
+                            <div style={{textAlign:'right'}}>
+                                <div style={{fontSize:'1.4rem',fontWeight:'bold',color:tPnl>=0?'var(--success)':'var(--danger)'}}>
+                                    {tPnl>=0?'+':''}{tPnl.toFixed(4)} SOL
+                                </div>
+                                <small style={{color:pc>=0?'var(--success)':'var(--danger)'}}>{pc>=0?'+':''}{pc.toFixed(2)}%</small>
+                            </div>
+                        </div>
+
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px',marginBottom:'16px'}}>
+                            {[
+                                {label:'Investido',    val:`${trade.totalInvested.toFixed(4)} SOL`},
+                                {label:'Preço Médio',  val:`$${trade.avgEntryPrice.toFixed(8)}`},
+                                {label:'Preço Atual',  val:`$${cp.toFixed(8)}`},
+                                {label:'Realizado',    val:`${pPnl>=0?'+':''}${pPnl.toFixed(4)} SOL`, color:pPnl>=0?'var(--success)':'var(--danger)'},
+                            ].map(s=>(
+                                <div key={s.label} style={{background:'var(--bg-primary)',padding:'10px',borderRadius:'8px'}}>
+                                    <div style={{color:'var(--text-secondary)',fontSize:'0.75rem',marginBottom:'3px'}}>{s.label}</div>
+                                    <div style={{fontWeight:'bold',fontSize:'0.9rem',color:s.color||'var(--text-primary)'}}>{s.val}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {trade.buyReason && trade.buyReason !== '—' && (
+                            <div style={{background:'rgba(59,130,246,0.1)',border:'1px solid rgba(59,130,246,0.3)',borderRadius:'8px',padding:'10px',marginBottom:'16px'}}>
+                                <span style={{color:'var(--text-secondary)',fontSize:'0.78rem'}}>Motivo da compra: </span>
+                                <strong style={{color:'var(--accent)'}}>{trade.buyReason}</strong>
+                            </div>
+                        )}
+
+                        {trade.entries?.length > 0 && (
+                            <div style={{marginBottom:'14px'}}>
+                                <div style={{color:'var(--text-secondary)',fontSize:'0.75rem',fontWeight:'bold',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'1px'}}>Entradas</div>
+                                {trade.entries.map((e,i)=>(
+                                    <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'7px 10px',background:'var(--bg-primary)',borderRadius:'6px',marginBottom:'4px',fontSize:'0.82rem'}}>
+                                        <span>#{i+1} — {e.amountSOL.toFixed(3)} SOL</span>
+                                        <span style={{color:'var(--text-secondary)'}}>${e.price.toFixed(8)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {(trade.partialExits||[]).length > 0 && (
+                            <div style={{marginBottom:'14px'}}>
+                                <div style={{color:'var(--text-secondary)',fontSize:'0.75rem',fontWeight:'bold',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'1px'}}>Saídas Parciais</div>
+                                {trade.partialExits.map((e,i)=>(
+                                    <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'7px 10px',background:'var(--bg-primary)',borderRadius:'6px',marginBottom:'4px',fontSize:'0.82rem'}}>
+                                        <span>{e.percentage}% — {e.soldSOL?.toFixed(3)} SOL</span>
+                                        <span style={{color:e.pnl>=0?'var(--success)':'var(--danger)'}}>{e.pnl>=0?'+':''}{e.pnl.toFixed(4)} SOL</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        <div style={{background:'var(--bg-primary)',borderRadius:'8px',padding:'10px',marginBottom:'16px'}}>
+                            <div style={{color:'var(--text-secondary)',fontSize:'0.72rem',marginBottom:'3px'}}>Contrato</div>
+                            <div style={{fontSize:'0.73rem',wordBreak:'break-all',color:'var(--text-primary)'}}>{trade.tokenAddress||'—'}</div>
+                        </div>
+
+                        <div style={{display:'flex',gap:'10px'}}>
+                            <button onClick={()=>window.open(`https://dexscreener.com/solana/${trade.tokenAddress}`,'_blank')}
+                                style={{flex:1,margin:0,background:'rgba(16,185,129,0.15)',border:'1px solid var(--success)',color:'var(--success)'}}>
+                                📈 DexScreener
+                            </button>
+                            <button onClick={onClose} style={{flex:1,margin:0}}>Fechar</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function RankingTable({ ranking, rankingLoading, userId, user }) {
+            const [sortBy, setSortBy] = React.useState('xp');
+            const SORT_OPTS = [
+                { id:'xp',       label:'⭐ XP'       },
+                { id:'totalPnl', label:'💰 P&L'      },
+                { id:'winRate',  label:'🎯 Win Rate'  },
+            ];
+            const sorted = [...ranking].sort((a,b) => {
+                if (sortBy === 'winRate') return b.winRate - a.winRate;
+                if (sortBy === 'totalPnl') return b.totalPnl - a.totalPnl;
+                return b.xp - a.xp;
+            });
+            const MEDALS = ['🥇','🥈','🥉'];
+
+            return (
+                <div className="card" style={{padding:'0', overflow:'hidden'}}>
+                    <div style={{display:'flex', borderBottom:'1px solid var(--border)'}}>
+                        {SORT_OPTS.map(o => (
+                            <div key={o.id} onClick={()=>setSortBy(o.id)} style={{
+                                flex:1, padding:'12px', textAlign:'center', cursor:'pointer',
+                                fontSize:'0.85rem', fontWeight:'bold',
+                                borderBottom: sortBy===o.id ? '2px solid var(--accent)' : '2px solid transparent',
+                                color: sortBy===o.id ? 'var(--accent)' : 'var(--text-secondary)',
+                                background: sortBy===o.id ? 'rgba(59,130,246,0.06)' : 'transparent',
+                                transition:'all 0.15s'
+                            }}>{o.label}</div>
+                        ))}
+                    </div>
+
+                    {rankingLoading ? (
+                        <div style={{padding:'40px', textAlign:'center', color:'var(--text-secondary)'}}>
+                            ⏳ Carregando ranking...
+                        </div>
+                    ) : sorted.length === 0 ? (
+                        <div style={{padding:'40px', textAlign:'center', color:'var(--text-secondary)'}}>
+                            <div style={{fontSize:'2rem', marginBottom:'10px'}}>🏜️</div>
+                            Nenhum trader no ranking ainda.<br/>
+                            <small>Feche um trade para aparecer aqui!</small>
+                        </div>
+                    ) : (
+                        sorted.map((r, i) => {
+                            const isMe = r.id === userId;
+                            const levelIdx = Math.max(0, Math.min(LEVELS.length-1, r.level || 0));
+                            const lvl = LEVELS[levelIdx] || LEVELS[0];
+                            return (
+                                <div key={r.id} style={{
+                                    display:'flex', alignItems:'center', gap:'12px',
+                                    padding:'14px 18px', borderBottom:'1px solid var(--border)',
+                                    background: isMe ? 'rgba(59,130,246,0.06)' : 'transparent',
+                                }}>
+                                    <div style={{
+                                        width:'32px', textAlign:'center', flexShrink:0,
+                                        fontSize: i < 3 ? '1.4rem' : '1rem', fontWeight:'bold',
+                                        color: i < 3 ? 'inherit' : 'var(--text-secondary)'
+                                    }}>
+                                        {i < 3 ? MEDALS[i] : `#${i+1}`}
+                                    </div>
+
+                                    <div style={{
+                                        width:'38px', height:'38px', borderRadius:'50%', flexShrink:0,
+                                        background:'var(--bg-primary)', display:'flex', alignItems:'center',
+                                        justifyContent:'center', fontSize:'1.2rem',
+                                        border: isMe ? '2px solid var(--accent)' : '1px solid var(--border)'
+                                    }}>{lvl.icon}</div>
+
+                                    <div style={{flex:1, minWidth:0}}>
+                                        <div style={{
+                                            fontWeight:'bold', fontSize:'0.92rem',
+                                            color: isMe ? 'var(--accent)' : 'var(--text-primary)',
+                                            overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'
+                                        }}>
+                                            {r.username} {isMe && <span style={{fontSize:'0.7rem', color:'var(--accent)'}}>← você</span>}
+                                        </div>
+                                        <div style={{fontSize:'0.75rem', color:'var(--text-secondary)'}}>
+                                            {lvl.name} · {r.trades} trades
+                                        </div>
+                                    </div>
+
+                                    <div style={{textAlign:'right', flexShrink:0}}>
+                                        {sortBy === 'xp' && <>
+                                            <div style={{fontWeight:'bold', color:'var(--accent)', fontSize:'0.95rem'}}>{r.xp.toLocaleString()} XP</div>
+                                            <div style={{fontSize:'0.75rem', color: r.totalPnl >= 0 ? 'var(--success)' : 'var(--danger)'}}>
+                                                {r.totalPnl >= 0 ? '+' : ''}{r.totalPnl.toFixed(2)} SOL
+                                            </div>
+                                        </>}
+                                        {sortBy === 'totalPnl' && <>
+                                            <div style={{fontWeight:'bold', fontSize:'0.95rem', color: r.totalPnl >= 0 ? 'var(--success)' : 'var(--danger)'}}>
+                                                {r.totalPnl >= 0 ? '+' : ''}{r.totalPnl.toFixed(2)} SOL
+                                            </div>
+                                            <div style={{fontSize:'0.75rem', color:'var(--text-secondary)'}}>{r.xp.toLocaleString()} XP</div>
+                                        </>}
+                                        {sortBy === 'winRate' && <>
+                                            <div style={{fontWeight:'bold', fontSize:'0.95rem', color: r.winRate >= 50 ? 'var(--success)' : 'var(--warning)'}}>
+                                                {r.winRate}% wins
+                                            </div>
+                                            <div style={{fontSize:'0.75rem', color:'var(--text-secondary)'}}>{r.xp.toLocaleString()} XP</div>
+                                        </>}
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            );
+        }
+
+        // ── COMMUNITY CONSTANTS ───────────────────────────────
+        const COMMUNITY_TOPICS = [
+            { id:'dicas',      label:'💡 Dicas/Tutoriais', color:'#3b82f6', expiry: null },
+            { id:'alertas',    label:'🚨 Rug/Alertas',     color:'#ef4444', expiry: 48 },   // 48h
+            { id:'kols',       label:'📢 KOLs',            color:'#8b5cf6', expiry: null },
+            { id:'noticias',   label:'📰 Notícias',        color:'#06b6d4', expiry: 72 },   // 72h
+            { id:'calls',      label:'🔥 Calls',           color:'#f59e0b', expiry: 24 },   // 24h
+            { id:'baleias',    label:'🐳 Baleias',         color:'#10b981', expiry: 24 },
+            { id:'geral',      label:'🤝 Geral',           color:'#94a3b8', expiry: null },
+        ];
+        const MAX_POSTS_PER_DAY = 5;
+        const XP_PER_LIKE       = 10;
+        const XP_PER_REPORT     = -20;
+        const MIN_LEVEL_VERIFIED = 5; // Skilled+
+
+        function CommunityTab({ user, onXPChange }) {
+            const [topic, setTopic]       = React.useState('dicas');
+            const [posts, setPosts]       = React.useState([]);
+            const [postsLoading, setPostsLoading] = React.useState(false);
+            const [composing, setComposing] = React.useState(false);
+            const [draft, setDraft]       = React.useState('');
+            const [submitting, setSubmitting] = React.useState(false);
+            const [communityRank, setCommunityRank] = React.useState([]);
+            const [showRank, setShowRank] = React.useState(false);
+            const [view, setView]         = React.useState('feed'); // 'feed' | 'rank'
+
+            // helpers
+            const myLevel = LEVELS.reduce((acc, l) => (user.xp || 0) >= l.xp ? l.level : acc, 1);
+            const isVerified = myLevel >= MIN_LEVEL_VERIFIED;
+            const storageKey = (t) => `helmcomm${t}`;       // e.g. helmcommdicas
+            const rankKey    = (uid) => `helmcommrank${uid}`; // e.g. helmcommrank123456
+
+            const todayKey = () => new Date().toISOString().split('T')[0].replace(/-/g,'');
+
+            // posts already liked/reported by this user (local)
+            const myActionsKey = `helmCommunityActions_${user.id}`;
+            const getMyActions = () => { try { return JSON.parse(localStorage.getItem(myActionsKey)||'{}'); } catch { return {}; } };
+            const saveMyActions = (a) => localStorage.setItem(myActionsKey, JSON.stringify(a));
+
+            const postsToday = () => {
+                try {
+                    const k = `helmPostsToday_${user.id}_${todayKey()}`;
+                    return parseInt(localStorage.getItem(k)||'0');
+                } catch { return 0; }
+            };
+            const incPostsToday = () => {
+                const k = `helmPostsToday_${user.id}_${todayKey()}`;
+                localStorage.setItem(k, postsToday() + 1);
+            };
+
+            // ── STORAGE ABSTRACTION ──
+            // Uses window.storage (Claude.ai) when available, falls back to localStorage
+            const store = {
+                async set(key, value, shared) {
+                    if (window.storage) return window.storage.set(key, value, shared);
+                    localStorage.setItem(key, value); return { key, value };
+                },
+                async get(key, shared) {
+                    if (window.storage) return window.storage.get(key, shared);
+                    const v = localStorage.getItem(key);
+                    if (v === null) throw new Error('not found');
+                    return { key, value: v };
+                },
+                async list(prefix, shared) {
+                    if (window.storage) return window.storage.list(prefix, shared);
+                    const keys = Object.keys(localStorage).filter(k => k.startsWith(prefix));
+                    return { keys };
+                },
+            };
+
+            // fetch posts for current topic
+            const fetchPosts = async () => {
+                setPostsLoading(true);
+                try {
+                    const result = await store.list(storageKey(topic), true);
+                    const keys = result?.keys || [];
+                    const items = await Promise.all(keys.map(async k => {
+                        try { const r = await store.get(k, true); return r ? JSON.parse(r.value) : null; }
+                        catch { return null; }
+                    }));
+                    const topicCfg = COMMUNITY_TOPICS.find(t => t.id === topic);
+                    const now = Date.now();
+                    let valid = items.filter(p => {
+                        if (!p) return false;
+                        if (topicCfg?.expiry) {
+                            const age = (now - p.createdAt) / (1000*60*60);
+                            return age < topicCfg.expiry;
+                        }
+                        return true;
+                    });
+                    valid.sort((a,b) => {
+                        const aPin = (a.likes||0) >= 5, bPin = (b.likes||0) >= 5;
+                        if (aPin !== bPin) return bPin - aPin;
+                        if (b.likes !== a.likes) return (b.likes||0) - (a.likes||0);
+                        return b.createdAt - a.createdAt;
+                    });
+                    setPosts(valid);
+                } catch { setPosts([]); } finally { setPostsLoading(false); }
+            };
+
+            const fetchCommunityRank = async () => {
+                try {
+                    const result = await store.list('helmcommrank', true);
+                    const keys = result?.keys || [];
+                    const items = await Promise.all(keys.map(async k => {
+                        try { const r = await store.get(k, true); return r ? JSON.parse(r.value) : null; }
+                        catch { return null; }
+                    }));
+                    setCommunityRank(items.filter(Boolean).sort((a,b) => (b.totalLikes||0) - (a.totalLikes||0)));
+                } catch { setCommunityRank([]); }
+            };
+
+            const updateCommRank = async (likeDelta) => {
+                try {
+                    const existing = await store.get(rankKey(user.id), true).catch(()=>null);
+                    const cur = existing ? JSON.parse(existing.value) : { id: user.id, username: user.username||'Anon', totalLikes:0, posts:0 };
+                    cur.totalLikes = Math.max(0, (cur.totalLikes||0) + likeDelta);
+                    await store.set(rankKey(user.id), JSON.stringify(cur), true);
+                } catch {}
+            };
+
+            useEffect(() => { fetchPosts(); }, [topic]);
+            useEffect(() => { if (view === 'rank') fetchCommunityRank(); }, [view]);
+
+            const handleSubmit = async () => {
+                if (!draft.trim()) return;
+                if (postsToday() >= MAX_POSTS_PER_DAY) {
+                    alert(`Limite de ${MAX_POSTS_PER_DAY} posts por dia atingido.`); return;
+                }
+                setSubmitting(true);
+                try {
+                    const post = {
+                        id: `${user.id}t${Date.now()}`,
+                        authorId: user.id,
+                        authorName: user.username || 'Anon',
+                        authorLevel: myLevel,
+                        isVerified,
+                        topic,
+                        content: draft.trim(),
+                        likes: 0,
+                        reports: 0,
+                        createdAt: Date.now(),
+                    };
+                    const key = `${storageKey(topic)}${post.id}`;
+                    await store.set(key, JSON.stringify(post), true);
+                    // update comm rank post count
+                    const existing = await store.get(rankKey(user.id), true).catch(()=>null);
+                    const cur = existing ? JSON.parse(existing.value) : { id: user.id, username: user.username||'Anon', totalLikes:0, posts:0 };
+                    cur.posts = (cur.posts||0) + 1;
+                    await store.set(rankKey(user.id), JSON.stringify(cur), true);
+                    incPostsToday();
+                    setDraft('');
+                    setComposing(false);
+                    fetchPosts();
+                } catch(e) { alert('Erro ao publicar.'); } finally { setSubmitting(false); }
+            };
+
+            const handleLike = async (post) => {
+                const actions = getMyActions();
+                if (actions[post.id]?.liked) return; // already liked
+                try {
+                    const key = `${storageKey(post.topic)}${post.id}`;
+                    const fresh = await store.get(key, true);
+                    if (!fresh) return;
+                    const p = JSON.parse(fresh.value);
+                    p.likes = (p.likes||0) + 1;
+                    await store.set(key, JSON.stringify(p), true);
+                    // XP for author
+                    if (p.authorId !== user.id) {
+                        // we can't directly mutate another user's XP (no server),
+                        // but we update the community rank score for the author
+                        await updateCommRankFor(p.authorId, p.authorName, 1);
+                    }
+                    // XP reward for ourselves for liking (helping the community)
+                    onXPChange(XP_PER_LIKE, '👍 Post útil na comunidade');
+                    // Mark as liked
+                    actions[post.id] = { ...(actions[post.id]||{}), liked: true };
+                    saveMyActions(actions);
+                    fetchPosts();
+                } catch {}
+            };
+
+            const updateCommRankFor = async (authorId, authorName, delta) => {
+                try {
+                    const k = rankKey(authorId);
+                    const existing = await store.get(k, true).catch(()=>null);
+                    const cur = existing ? JSON.parse(existing.value) : { id: authorId, username: authorName, totalLikes:0, posts:0 };
+                    cur.totalLikes = Math.max(0, (cur.totalLikes||0) + delta);
+                    await store.set(k, JSON.stringify(cur), true);
+                } catch {}
+            };
+
+            const handleReport = async (post) => {
+                const actions = getMyActions();
+                if (actions[post.id]?.reported) return;
+                if (!confirm('Denunciar este post? O autor perderá XP se houver denúncias suficientes.')) return;
+                try {
+                    const key = `${storageKey(post.topic)}${post.id}`;
+                    const fresh = await store.get(key, true);
+                    if (!fresh) return;
+                    const p = JSON.parse(fresh.value);
+                    p.reports = (p.reports||0) + 1;
+                    await store.set(key, JSON.stringify(p), true);
+                    // penalize author's community rank on 3+ reports
+                    if (p.reports >= 3) {
+                        await updateCommRankFor(p.authorId, p.authorName, -5);
+                        onXPChange(XP_PER_REPORT, `🚩 Post denunciado (${p.reports} reports)`);
+                    }
+                    actions[post.id] = { ...(actions[post.id]||{}), reported: true };
+                    saveMyActions(actions);
+                    fetchPosts();
+                } catch {}
+            };
+
+            const topicCfg   = COMMUNITY_TOPICS.find(t => t.id === topic);
+            const remaining  = MAX_POSTS_PER_DAY - postsToday();
+            const actions    = getMyActions();
+
+            const timeAgo = (ts) => {
+                const m = Math.floor((Date.now()-ts)/60000);
+                if (m < 1) return 'agora';
+                if (m < 60) return `${m}m`;
+                const h = Math.floor(m/60);
+                if (h < 24) return `${h}h`;
+                return `${Math.floor(h/24)}d`;
+            };
+
+            const expiryLeft = (post) => {
+                if (!topicCfg?.expiry) return null;
+                const left = topicCfg.expiry * 3600000 - (Date.now() - post.createdAt);
+                const h = Math.floor(left/3600000);
+                const min = Math.floor((left%3600000)/60000);
+                return h > 0 ? `${h}h restantes` : `${min}m restantes`;
+            };
+
+            return (
+                <div className="fade-in">
+                    {/* Header */}
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'14px'}}>
+                        <h2>💬 Comunidade</h2>
+                        <div style={{display:'flex', gap:'8px'}}>
+                            <button onClick={()=>setView(view==='feed'?'rank':'feed')}
+                                style={{padding:'8px 14px', fontSize:'0.82rem', margin:0,
+                                    background: view==='rank' ? 'var(--accent)' : 'var(--bg-card)',
+                                    border:'1px solid var(--border)', borderRadius:'8px', cursor:'pointer'}}>
+                                {view==='rank' ? '← Feed' : '🏅 Ranking'}
+                            </button>
+                            {view==='feed' && (
+                                <button onClick={()=>setComposing(!composing)}
+                                    style={{padding:'8px 14px', fontSize:'0.82rem', margin:0,
+                                        background:'var(--accent)', color:'white', border:'none', borderRadius:'8px', cursor:'pointer'}}>
+                                    ✏️ Novo post
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* ── COMMUNITY RANK VIEW ── */}
+                    {view === 'rank' && (
+                        <div className="card" style={{padding:'0', overflow:'hidden'}}>
+                            <div style={{padding:'14px 18px', borderBottom:'1px solid var(--border)', fontWeight:'bold', fontSize:'0.95rem'}}>
+                                🏅 Top Colaboradores
+                            </div>
+                            {communityRank.length === 0 ? (
+                                <div style={{padding:'40px', textAlign:'center', color:'var(--text-secondary)'}}>
+                                    Nenhum colaborador ainda. Seja o primeiro!
+                                </div>
+                            ) : communityRank.map((r, i) => {
+                                const isMe = r.id === user.id;
+                                const MEDALS = ['🥇','🥈','🥉'];
+                                return (
+                                    <div key={r.id} style={{
+                                        display:'flex', alignItems:'center', gap:'12px',
+                                        padding:'13px 18px', borderBottom:'1px solid var(--border)',
+                                        background: isMe ? 'rgba(59,130,246,0.06)' : 'transparent'
+                                    }}>
+                                        <div style={{width:'28px', textAlign:'center', fontWeight:'bold', fontSize: i<3?'1.3rem':'0.95rem', color:'var(--text-secondary)'}}>
+                                            {i<3 ? MEDALS[i] : `#${i+1}`}
+                                        </div>
+                                        <div style={{flex:1}}>
+                                            <div style={{fontWeight:'bold', color: isMe?'var(--accent)':'var(--text-primary)', fontSize:'0.9rem'}}>
+                                                {r.username} {isMe && <span style={{fontSize:'0.7rem'}}>← você</span>}
+                                            </div>
+                                            <div style={{fontSize:'0.75rem', color:'var(--text-secondary)'}}>
+                                                {r.posts||0} posts publicados
+                                            </div>
+                                        </div>
+                                        <div style={{textAlign:'right'}}>
+                                            <div style={{fontWeight:'bold', color:'var(--success)', fontSize:'0.95rem'}}>👍 {r.totalLikes||0}</div>
+                                            <div style={{fontSize:'0.72rem', color:'var(--text-secondary)'}}>likes recebidos</div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* ── FEED VIEW ── */}
+                    {view === 'feed' && (<>
+                        {/* Topic pills */}
+                        <div style={{display:'flex', gap:'6px', flexWrap:'wrap', marginBottom:'14px'}}>
+                            {COMMUNITY_TOPICS.map(t => (
+                                <div key={t.id} onClick={()=>setTopic(t.id)} style={{
+                                    padding:'6px 12px', borderRadius:'20px', cursor:'pointer',
+                                    fontSize:'0.8rem', fontWeight:'bold', transition:'all 0.15s',
+                                    background: topic===t.id ? t.color+'33' : 'var(--bg-card)',
+                                    border: `1px solid ${topic===t.id ? t.color : 'var(--border)'}`,
+                                    color: topic===t.id ? t.color : 'var(--text-secondary)',
+                                }}>{t.label}</div>
+                            ))}
+                        </div>
+
+                        {/* Composer */}
+                        {composing && (
+                            <div className="card" style={{marginBottom:'14px', padding:'16px'}}>
+                                <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px'}}>
+                                    <span style={{fontWeight:'bold', color: topicCfg?.color}}>{topicCfg?.label}</span>
+                                    {topicCfg?.expiry && <span style={{fontSize:'0.75rem', color:'var(--text-secondary)'}}>· expira em {topicCfg.expiry}h</span>}
+                                    {isVerified && <span style={{fontSize:'0.72rem', background:'rgba(59,130,246,0.15)', color:'var(--accent)', padding:'2px 8px', borderRadius:'10px', border:'1px solid rgba(59,130,246,0.3)'}}>✅ Verificado</span>}
+                                    <span style={{marginLeft:'auto', fontSize:'0.75rem', color: remaining<=1?'var(--danger)':'var(--text-secondary)'}}>
+                                        {remaining}/{MAX_POSTS_PER_DAY} posts hoje
+                                    </span>
+                                </div>
+                                <textarea
+                                    value={draft}
+                                    onChange={e=>setDraft(e.target.value)}
+                                    placeholder={`Compartilhe algo sobre ${topicCfg?.label}...`}
+                                    maxLength={500}
+                                    style={{width:'100%', minHeight:'90px', background:'var(--bg-primary)', border:'1px solid var(--border)',
+                                        borderRadius:'8px', padding:'10px', color:'var(--text-primary)', fontSize:'0.9rem',
+                                        resize:'vertical', fontFamily:'inherit', boxSizing:'border-box'}}
+                                />
+                                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'10px'}}>
+                                    <span style={{fontSize:'0.75rem', color:'var(--text-secondary)'}}>{draft.length}/500</span>
+                                    <div style={{display:'flex', gap:'8px'}}>
+                                        <button onClick={()=>{setComposing(false);setDraft('');}} style={{margin:0, padding:'8px 14px', fontSize:'0.82rem'}}>Cancelar</button>
+                                        <button onClick={handleSubmit} disabled={!draft.trim()||submitting} className="success"
+                                            style={{margin:0, padding:'8px 16px', fontSize:'0.82rem', opacity:draft.trim()?1:0.5}}>
+                                            {submitting ? '...' : '📤 Publicar'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Posts */}
+                        {postsLoading ? (
+                            <div style={{padding:'40px', textAlign:'center', color:'var(--text-secondary)'}}>⏳ Carregando posts...</div>
+                        ) : posts.length === 0 ? (
+                            <div style={{padding:'40px', textAlign:'center', color:'var(--text-secondary)'}}>
+                                <div style={{fontSize:'2rem', marginBottom:'8px'}}>💬</div>
+                                Nenhum post ainda. Seja o primeiro!
+                            </div>
+                        ) : posts.map(post => {
+                            const isPinned  = (post.likes||0) >= 5;
+                            const myLiked   = actions[post.id]?.liked;
+                            const myReported= actions[post.id]?.reported;
+                            const expLeft   = expiryLeft(post);
+                            return (
+                                <div key={post.id} className="card" style={{
+                                    marginBottom:'10px', padding:'14px 16px',
+                                    border: isPinned ? '1px solid var(--accent)' : '1px solid var(--border)',
+                                    background: isPinned ? 'rgba(59,130,246,0.04)' : 'var(--bg-card)'
+                                }}>
+                                    {/* Post header */}
+                                    <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'10px', flexWrap:'wrap'}}>
+                                        {isPinned && <span style={{fontSize:'0.72rem', background:'rgba(59,130,246,0.15)', color:'var(--accent)', padding:'2px 7px', borderRadius:'10px'}}>📌 Pinado</span>}
+                                        <span style={{fontWeight:'bold', fontSize:'0.88rem'}}>{post.authorName}</span>
+                                        {post.isVerified && <span style={{fontSize:'0.7rem', background:'rgba(59,130,246,0.15)', color:'var(--accent)', padding:'2px 7px', borderRadius:'10px', border:'1px solid rgba(59,130,246,0.3)'}}>✅ Verificado</span>}
+                                        <span style={{fontSize:'0.72rem', color:'var(--text-secondary)', background:'var(--bg-primary)', padding:'2px 7px', borderRadius:'10px'}}>
+                                            {LEVELS[Math.min(post.authorLevel-1, LEVELS.length-1)]?.icon} Nv.{post.authorLevel}
+                                        </span>
+                                        <span style={{marginLeft:'auto', fontSize:'0.75rem', color:'var(--text-secondary)'}}>{timeAgo(post.createdAt)}</span>
+                                    </div>
+
+                                    {/* Content */}
+                                    <p style={{fontSize:'0.9rem', lineHeight:1.55, margin:'0 0 12px', color:'var(--text-primary)', whiteSpace:'pre-wrap'}}>{post.content}</p>
+
+                                    {/* Expiry warning */}
+                                    {expLeft && <div style={{fontSize:'0.73rem', color:'var(--warning)', marginBottom:'10px'}}>⏰ {expLeft}</div>}
+
+                                    {/* Actions */}
+                                    <div style={{display:'flex', gap:'10px', alignItems:'center'}}>
+                                        <button onClick={()=>handleLike(post)} style={{
+                                            margin:0, padding:'6px 12px', fontSize:'0.82rem',
+                                            background: myLiked ? 'rgba(16,185,129,0.15)' : 'var(--bg-primary)',
+                                            border: `1px solid ${myLiked ? 'var(--success)' : 'var(--border)'}`,
+                                            color: myLiked ? 'var(--success)' : 'var(--text-secondary)',
+                                            borderRadius:'8px', cursor: myLiked ? 'default' : 'pointer'
+                                        }}>
+                                            👍 {post.likes||0} {!myLiked && <span style={{fontSize:'0.72rem'}}>(+{XP_PER_LIKE}xp)</span>}
+                                        </button>
+                                        {!myReported && post.authorId !== user.id && (
+                                            <button onClick={()=>handleReport(post)} style={{
+                                                margin:0, padding:'6px 10px', fontSize:'0.78rem',
+                                                background:'transparent', border:'1px solid transparent',
+                                                color:'var(--text-secondary)', borderRadius:'8px', cursor:'pointer', opacity:0.6
+                                            }}>🚩 {post.reports||0}</button>
+                                        )}
+                                        {myReported && <span style={{fontSize:'0.75rem', color:'var(--text-secondary)'}}>🚩 Denunciado</span>}
+                                        {post.reports >= 3 && <span style={{fontSize:'0.72rem', color:'var(--danger)', marginLeft:'auto'}}>⚠️ Conteúdo denunciado</span>}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </>)}
+                </div>
+            );
+        }
+
+        function HelmApp() {
+            const [user, setUser] = useState(null);
+            const [activeTab, setActiveTab] = useState('profile');
+            const [tokenAddress, setTokenAddress] = useState('');
+            const [analysis, setAnalysis] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [theme, setTheme] = useState('default');
+            const [toast, setToast] = useState(null);
+            const [xpPopup, setXPPopup] = useState(null);
+            const [buyModal, setBuyModal] = useState(null);
+            const [closeModal, setCloseModal] = useState(null);
+            const [portfolioModal, setPortfolioModal] = useState(null);
+            const [ranking, setRanking] = useState([]);
+            const [rankingLoading, setRankingLoading] = useState(false);
+
+            // Auto-publish score whenever user data changes (use user directly, not stale closure)
+            useEffect(() => {
+                if (!user?.id) return;
+                const closedTrades = (user.trades || []).filter(t => t.status === 'closed');
+                const wins = closedTrades.filter(t => (t.totalPnl || 0) > 0).length;
+                const totalPnl = closedTrades.reduce((s, t) => s + (t.totalPnl || 0), 0);
+                const winRate = closedTrades.length > 0 ? Math.round((wins / closedTrades.length) * 100) : 0;
+                const lvlIdx = LEVELS.reduce((acc, l, i) => (user.xp || 0) >= l.xp ? i : acc, 0);
+                const entry = {
+                    id: user.id,
+                    username: user.username || 'Anon',
+                    xp: user.xp || 0,
+                    level: lvlIdx + 1,
+                    totalPnl: parseFloat(totalPnl.toFixed(4)),
+                    winRate,
+                    trades: closedTrades.length,
+                    updatedAt: Date.now(),
+                };
+                window.storage?.set(`helmrank${user.id}`, JSON.stringify(entry), true).catch(()=>{});
+            }, [user?.xp, user?.trades?.length]);
+
+            // Fetch ranking when tab opens
+            useEffect(() => {
+                if (activeTab === 'ranking') fetchRanking();
+            }, [activeTab]);
+
+            const getWeekKey = () => {
+                const d = new Date();
+                const day = d.getDay() === 0 ? 6 : d.getDay() - 1; // Monday=0
+                const monday = new Date(d); monday.setDate(d.getDate() - day); monday.setHours(0,0,0,0);
+                return monday.toISOString().split('T')[0];
+            };
+
+            const NARR_BASE = [
+                { id:'n_ai',    title:'AI Agents',      emoji:'🤖', votes:445 },
+                { id:'n_cap',   title:'Capivaras',      emoji:'🦫', votes:421 },
+                { id:'n_elon',  title:'Elon',           emoji:'🐦', votes:367 },
+                { id:'n_cat',   title:'Gatos',          emoji:'🐱', votes:312 },
+                { id:'n_pol',   title:'Política',       emoji:'🏛️', votes:289 },
+                { id:'n_dog',   title:'Cachorros',      emoji:'🐕', votes:278 },
+                { id:'n_frog',  title:'Sapos',          emoji:'🐸', votes:234 },
+                { id:'n_dino',  title:'Dinossauros',    emoji:'🦖', votes:221 },
+                { id:'n_retro', title:'Retrô / 8-bit',  emoji:'👾', votes:210 },
+                { id:'n_anime', title:'Anime',          emoji:'⛩️', votes:198 },
+                { id:'n_pen',   title:'Pinguins',       emoji:'🐧', votes:187 },
+                { id:'n_space', title:'Espaço',         emoji:'🚀', votes:176 },
+                { id:'n_sport', title:'Esportes',       emoji:'⚽', votes:167 },
+                { id:'n_kol',   title:'KOL / Criadores',emoji:'📢', votes:156 },
+                { id:'n_food',  title:'Comida',         emoji:'🍔', votes:143 },
+                { id:'n_celeb', title:'Celebridades',   emoji:'⭐', votes:134 },
+            ];
+
+            const [narratives, setNarratives] = useState(() => {
+                try {
+                    const wk = getWeekKey();
+                    const saved = localStorage.getItem('helmNarratives');
+                    const savedWk = localStorage.getItem('helmNarrWk');
+                    if (saved && savedWk === wk) {
+                        const p = JSON.parse(saved);
+                        if (Array.isArray(p) && p[0]?.emoji) return p;
+                    }
+                } catch(e) {}
+                localStorage.removeItem('helmNarratives');
+                localStorage.setItem('helmNarrWk', getWeekKey());
+                return NARR_BASE;
+            });
+
+            const [userVotes, setUserVotes] = useState(() => {
+                try {
+                    const wk = getWeekKey();
+                    if (localStorage.getItem('helmVotesWk') !== wk) {
+                        localStorage.removeItem('helmUserVotes');
+                        localStorage.setItem('helmVotesWk', wk);
+                        return {};
+                    }
+                    const s = localStorage.getItem('helmUserVotes');
+                    return s ? JSON.parse(s) : {};
+                } catch(e) { return {}; }
+            });
+            
+            const pnlChartRef = useRef(null);
+            const winRateChartRef = useRef(null);
+            const tokenInputRef = useRef(null);
+
+            const showToast = (message, type = 'success') => {
+                setToast({ message, type });
+            };
+            
+            const showXPGain = (xp, reason) => {
+                setXPPopup({ xp, reason });
+            };
+            
+            const addXP = (typeOrAmount, reason) => {
+                const xpAmount = typeof typeOrAmount === 'number'
+                    ? typeOrAmount
+                    : (XP_TYPES[typeOrAmount] || 0);
+                
+                setUser(prev => {
+                    if (!prev) return prev;
+                    const oldLevel = getCurrentLevel(prev.xp || 0);
+                    const newXP = Math.max(0, (prev.xp || 0) + xpAmount); // nunca negativo
+                    const newLevel = getCurrentLevel(newXP);
+                    
+                    if (newLevel > oldLevel) {
+                        setTimeout(() => {
+                            showToast(`🎉 Level Up! Now ${LEVELS[newLevel - 1].name} (Lvl ${newLevel})`, 'success');
+                        }, 2100);
+                    } else if (newLevel < oldLevel) {
+                        setTimeout(() => {
+                            showToast(`📉 Level Down... Now ${LEVELS[newLevel - 1].name} (Lvl ${newLevel})`, 'warning');
+                        }, 2100);
+                    }
+                    
+                    return { ...prev, xp: newXP };
+                });
+                
+                showXPGain(xpAmount, reason);
+            };
+            
+            const getCurrentLevel = (xp) => {
+                for (let i = LEVELS.length - 1; i >= 0; i--) {
+                    if (xp >= LEVELS[i].xp) {
+                        return LEVELS[i].level;
+                    }
+                }
+                return 1;
+            };
+            
+            const getNextLevelXP = (currentXP) => {
+                const currentLevel = getCurrentLevel(currentXP);
+                if (currentLevel >= LEVELS.length) return LEVELS[LEVELS.length - 1].xp;
+                return LEVELS[currentLevel].xp;
+            };
+            
+            const checkBadges = (newUser) => {
+                const badges = new Set(newUser.badges || []);
+                const trades = newUser.trades || [];
+                const closedTrades = trades.filter(t => t.status === 'closed');
+                const wins = closedTrades.filter(t => t.pnl > 0);
+                
+                // First trade
+                if (trades.length >= 1 && !badges.has('first_trade')) {
+                    badges.add('first_trade');
+                    setTimeout(() => showToast('🎯 Badge Unlocked: First Trade!', 'success'), 500);
+                }
+                
+                // First profit
+                if (wins.length >= 1 && !badges.has('first_profit')) {
+                    badges.add('first_profit');
+                    setTimeout(() => showToast('💰 Badge Unlocked: First Win!', 'success'), 500);
+                }
+                
+                // Streaks
+                const currentStreak = newUser.currentStreak || 0;
+                if (currentStreak >= 3 && !badges.has('hot_streak_3')) badges.add('hot_streak_3');
+                if (currentStreak >= 5 && !badges.has('hot_streak_5')) badges.add('hot_streak_5');
+                if (currentStreak >= 10 && !badges.has('hot_streak_10')) badges.add('hot_streak_10');
+                
+                // Win rate
+                if (closedTrades.length >= 10) {
+                    const winRate = (wins.length / closedTrades.length) * 100;
+                    if (winRate >= 50 && !badges.has('win_rate_50')) badges.add('win_rate_50');
+                    if (winRate >= 60 && !badges.has('win_rate_60')) badges.add('win_rate_60');
+                    if (winRate >= 70 && !badges.has('win_rate_70')) badges.add('win_rate_70');
+                    if (winRate >= 80 && !badges.has('win_rate_80')) badges.add('win_rate_80');
+                }
+                
+                // Analyst
+                if ((newUser.analysisCount || 0) >= 10 && !badges.has('analyst')) {
+                    badges.add('analyst');
+                }
+                
+                // Trade count
+                if (trades.length >= 10 && !badges.has('trader_10')) badges.add('trader_10');
+                if (trades.length >= 50 && !badges.has('trader_50')) badges.add('trader_50');
+                if (trades.length >= 100 && !badges.has('trader_100')) badges.add('trader_100');
+                
+                return Array.from(badges);
+            };
+
+            useEffect(() => {
+                const saved = localStorage.getItem('helmUser');
+                if (saved) {
+                    const userData = JSON.parse(saved);
+                    userData.xp = userData.xp || 0;
+                    userData.badges = userData.badges || [];
+                    userData.currentStreak = userData.currentStreak || 0;
+                    userData.analysisCount = userData.analysisCount || 0;
+
+                    // MIGRATE old trades to new structure
+                    if (Array.isArray(userData.trades)) {
+                        userData.trades = userData.trades.map(t => {
+                            // If trade has old structure (entryPrice, amountSOL) migrate it
+                            if (!t.entries) {
+                                const price = t.entryPrice || t.avgEntryPrice || 0;
+                                const sol = t.amountSOL || t.totalInvested || 0;
+                                return {
+                                    ...t,
+                                    tokenAddress: t.tokenAddress || '',
+                                    entries: [{ price, amountSOL: sol, timestamp: t.openedAt || new Date().toISOString() }],
+                                    totalInvested: sol,
+                                    avgEntryPrice: price,
+                                    partialExits: t.partialExits || [],
+                                    totalPnl: t.totalPnl || t.pnl || 0,
+                                };
+                            }
+                            // Ensure partialExits exists
+                            return { ...t, partialExits: t.partialExits || [] };
+                        });
+                    } else {
+                        userData.trades = [];
+                    }
+
+                    setUser(userData);
+                }
+                
+                const savedTheme = localStorage.getItem('helmTheme') || 'default';
+                setTheme(savedTheme);
+                applyTheme(savedTheme);
+            }, []);
+
+            useEffect(() => {
+                if (user) localStorage.setItem('helmUser', JSON.stringify(user));
+            }, [user]);
+            
+            const applyTheme = (themeName) => {
+                document.body.className = '';
+                if (themeName === 'light') document.body.classList.add('light-theme');
+                if (themeName === 'neon') document.body.classList.add('neon-theme');
+                setTheme(themeName);
+                localStorage.setItem('helmTheme', themeName);
+            };
+
+            // Charts (same as V3)
+            useEffect(() => {
+                if (!user || !user.trades || activeTab !== 'profile') return;
+                const closedTrades = user.trades.filter(t => t.status === 'closed');
+                if (closedTrades.length === 0) return;
+                
+                const last7Days = [];
+                for (let i = 6; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    const dateStr = date.toLocaleDateString('en-US', { weekday: 'short' });
+                    const dayTrades = closedTrades.filter(t => {
+                        const tradeDate = new Date(t.closedAt);
+                        return tradeDate.toDateString() === date.toDateString();
+                    });
+                    const dayPnl = dayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+                    last7Days.push({ date: dateStr, pnl: dayPnl });
+                }
+                
+                if (pnlChartRef.current) {
+                    const ctx = pnlChartRef.current.getContext('2d');
+                    if (window.pnlChart) window.pnlChart.destroy();
+                    window.pnlChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: last7Days.map(d => d.date),
+                            datasets: [{
+                                label: 'P&L (SOL)',
+                                data: last7Days.map(d => d.pnl),
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' } },
+                                x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' } }
+                            }
+                        }
+                    });
+                }
+            }, [user, activeTab]);
+            
+            useEffect(() => {
+                if (!user || !user.trades || activeTab !== 'profile') return;
+                const closedTrades = user.trades.filter(t => t.status === 'closed');
+                if (closedTrades.length === 0) return;
+                
+                const wins = closedTrades.filter(t => t.pnl > 0).length;
+                const losses = closedTrades.length - wins;
+                
+                if (winRateChartRef.current) {
+                    const ctx = winRateChartRef.current.getContext('2d');
+                    if (window.winRateChart) window.winRateChart.destroy();
+                    window.winRateChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Wins', 'Losses'],
+                            datasets: [{
+                                data: [wins, losses],
+                                backgroundColor: ['#10b981', '#ef4444'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } }
+                        }
+                    });
+                }
+            }, [user, activeTab]);
+
+            // ── RANKING ──────────────────────────────────────
+            // ── GLOBAL STORAGE HELPER (same pattern as CommunityTab) ──
+            const gstore = {
+                set:  (k,v,s) => window.storage ? window.storage.set(k,v,s)  : (localStorage.setItem(k,v), Promise.resolve({key:k,value:v})),
+                get:  (k,s)   => window.storage ? window.storage.get(k,s)    : (() => { const v=localStorage.getItem(k); if(v===null) return Promise.reject(new Error('nf')); return Promise.resolve({key:k,value:v}); })(),
+                list: (p,s)   => window.storage ? window.storage.list(p,s)   : Promise.resolve({keys:Object.keys(localStorage).filter(k=>k.startsWith(p))}),
+            };
+
+            const publishRanking = async (u) => {
+                if (!u?.id) return;
+                try {
+                    const closedTrades = (u.trades || []).filter(t => t.status === 'closed');
+                    const wins = closedTrades.filter(t => (t.totalPnl || 0) > 0).length;
+                    const totalPnl = closedTrades.reduce((s, t) => s + (t.totalPnl || 0), 0);
+                    const winRate = closedTrades.length > 0 ? Math.round((wins / closedTrades.length) * 100) : 0;
+                    const lvlIdx = LEVELS.reduce((acc, l, i) => (u.xp || 0) >= l.xp ? i : acc, 0);
+                    const entry = {
+                        id: u.id, username: u.username || 'Anon',
+                        xp: u.xp || 0, level: lvlIdx + 1,
+                        totalPnl: parseFloat(totalPnl.toFixed(4)),
+                        winRate, trades: closedTrades.length, updatedAt: Date.now(),
+                    };
+                    await gstore.set(`helmrank${u.id}`, JSON.stringify(entry), true);
+                } catch(e) {}
+            };
+
+            const fetchRanking = async () => {
+                setRankingLoading(true);
+                try {
+                    const result = await gstore.list('helmrank', true);
+                    const keys = result?.keys || [];
+                    const entries = await Promise.all(
+                        keys.map(async k => {
+                            try { const r = await gstore.get(k, true); return r ? JSON.parse(r.value) : null; }
+                            catch { return null; }
+                        })
+                    );
+                    setRanking(entries.filter(Boolean).sort((a, b) => b.xp - a.xp));
+                } catch(e) {
+                    setRanking([]);
+                } finally {
+                    setRankingLoading(false);
+                }
+            };
+
+            const handleLogin = (method) => {
+                const newUser = {
+                    id: Date.now().toString(),
+                    username: 'Demo User',
+                    balance: 5.0,
+                    trades: [],
+                    xp: 0,
+                    badges: [],
+                    currentStreak: 0,
+                    analysisCount: 0,
+                    createdAt: new Date().toISOString()
+                };
+                setUser(newUser);
+                showToast('Welcome to HELM! 🎉', 'success');
+            };
+
+            const analyzeToken = async () => {
+                if (!tokenAddress) {
+                    showToast('Please enter a token address', 'warning');
+                    return;
+                }
+                
+                setLoading(true);
+                try {
+                    const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`);
+                    const data = await res.json();
+                    
+                    if (data.pairs && data.pairs.length > 0) {
+                        const pair = data.pairs[0];
+                        const tokenData = {
+                            address: tokenAddress,
+                            name: pair.baseToken?.name || 'Unknown',
+                            symbol: pair.baseToken?.symbol || '???',
+                            price: parseFloat(pair.priceUsd) || 0,
+                            liquidity: pair.liquidity?.usd || 0,
+                            volume24h: pair.volume?.h24 || 0,
+                            priceChange24h: pair.priceChange?.h24 || 0,
+                            txns24h: pair.txns?.h24 || {},
+                            marketCap: pair.fdv || pair.marketCap || 0,
+                            pairAddress: pair.pairAddress,
+                            dexId: pair.dexId,
+                            url: pair.url,
+                            pairCreatedAt: pair.pairCreatedAt,
+                            boosts: pair.boosts || {},
+                            priceChange1h:  pair.priceChange?.h1  || 0,
+                            priceChange6h:  pair.priceChange?.h6  || 0,
+                            holders: pair.holders || null, // may not be present
+                            // Social links
+                            links: {
+                                telegram: pair.info?.socials?.find(s => s.type === 'telegram')?.url || null,
+                                twitter:  pair.info?.socials?.find(s => s.type === 'twitter')?.url  || null,
+                                website:  pair.info?.websites?.[0]?.url || null,
+                            },
+                            // DEX paid profile
+                            hasDexPaid: !!(pair.info?.imageUrl || pair.info?.header || (pair.info?.socials?.length > 0)),
+                        };
+                        
+                        let riskScore = 100;
+                        const redFlags = [], greenFlags = [];
+
+                        // ── LIQUIDEZ ──
+                        if (tokenData.liquidity < 10000) { riskScore -= 25; redFlags.push('🚨 Liquidez muito baixa (< $10k)'); }
+                        else if (tokenData.liquidity < 50000) { riskScore -= 15; redFlags.push('⚠️ Liquidez baixa (< $50k)'); }
+                        else if (tokenData.liquidity > 100000) greenFlags.push('✅ Boa liquidez (> $100k)');
+
+                        // ── VOLUME ──
+                        if (tokenData.volume24h < 5000) { riskScore -= 20; redFlags.push('🚨 Volume muito baixo (< $5k/24h)'); }
+                        else if (tokenData.volume24h > 50000) greenFlags.push('✅ Volume saudável (> $50k/24h)');
+
+                        // ── VOLUME vs MC (volume inflado artificialmente) ──
+                        if (tokenData.marketCap > 0 && tokenData.volume24h > 0) {
+                            const volMcRatio = tokenData.volume24h / tokenData.marketCap;
+                            if (volMcRatio > 5) {
+                                riskScore -= 20;
+                                redFlags.push(`🚨 Volume (${(tokenData.volume24h/1000).toFixed(0)}k) desproporcional ao MC (${(tokenData.marketCap/1000).toFixed(0)}k) — possível manipulação`);
+                            } else if (volMcRatio > 2) {
+                                riskScore -= 10;
+                                redFlags.push(`⚠️ Volume ${(volMcRatio).toFixed(1)}× maior que o MC — suspeito`);
+                            }
+                        }
+
+                        // ── IDADE ──
+                        if (tokenData.pairCreatedAt) {
+                            const ageDays = (Date.now() - tokenData.pairCreatedAt) / (1000 * 60 * 60 * 24);
+                            if (ageDays < 1)        { riskScore -= 35; redFlags.push('🚨 Token novíssimo (< 1 dia) — risco extremo de rug'); }
+                            else if (ageDays < 3)   { riskScore -= 25; redFlags.push('🚨 Token com menos de 3 dias — muito arriscado'); }
+                            else if (ageDays < 7)   { riskScore -= 15; redFlags.push('⚠️ Token muito novo (< 1 semana)'); }
+                            else if (ageDays > 30)  greenFlags.push('✅ Token estabelecido (> 30 dias)');
+                        }
+
+                        // ── VOLATILIDADE ──
+                        if (Math.abs(tokenData.priceChange24h) > 100) { riskScore -= 15; redFlags.push('🚨 Volatilidade extrema nas últimas 24h'); }
+
+                        // ── TRANSAÇÕES & PRESSÃO ──
+                        const buys = tokenData.txns24h?.buys || 0;
+                        const sells = tokenData.txns24h?.sells || 0;
+                        const totalTxns = buys + sells;
+                        if (totalTxns < 10) { riskScore -= 15; redFlags.push('🚨 Poucas transações (< 10 em 24h)'); }
+                        else if (totalTxns > 100) greenFlags.push('✅ Trading ativo (> 100 txns/24h)');
+
+                        if (sells > 0 && buys / sells < 0.5) { riskScore -= 12; redFlags.push('🚨 Pressão de venda forte'); }
+                        else if (buys > sells * 1.5) greenFlags.push('✅ Pressão de compra forte');
+
+                        // ── WASH TRADING ──
+                        if (totalTxns > 20 && sells > 0 && buys / sells > 10) {
+                            riskScore -= 18;
+                            redFlags.push(`🚨 Ratio buys/sells suspeito (${buys}/${sells}) — possível wash trading`);
+                        }
+
+                        // ── FDV vs LIQUIDEZ ──
+                        if (tokenData.marketCap > 0 && tokenData.liquidity > 0) {
+                            const fdvLiqRatio = tokenData.marketCap / tokenData.liquidity;
+                            if (fdvLiqRatio > 1000) {
+                                riskScore -= 15;
+                                redFlags.push(`🚨 FDV ${(fdvLiqRatio/1000).toFixed(1)}k× maior que a liquidez — dump fácil`);
+                            } else if (fdvLiqRatio < 50) {
+                                greenFlags.push('✅ FDV saudável em relação à liquidez');
+                            }
+                        }
+
+                        // ── PUMP CONTÍNUO ──
+                        const pc1h  = tokenData.priceChange1h;
+                        const pc6h  = tokenData.priceChange6h;
+                        const pc24h = tokenData.priceChange24h;
+                        if (pc1h > 30 && pc6h > 30 && pc24h > 50) {
+                            riskScore -= 15;
+                            redFlags.push(`🚨 Pump contínuo (1h: +${pc1h.toFixed(0)}% / 6h: +${pc6h.toFixed(0)}% / 24h: +${pc24h.toFixed(0)}%) — dump iminente?`);
+                        }
+
+                        // ── DEX ──
+                        const knownDexes = ['raydium', 'pumpswap', 'pump.fun', 'orca', 'meteora'];
+                        if (tokenData.dexId === 'raydium') {
+                            greenFlags.push('✅ Par em Raydium — DEX principal de Solana');
+                        } else if (tokenData.dexId === 'pumpswap' || tokenData.dexId === 'pump.fun') {
+                            greenFlags.push(`✅ Par em ${tokenData.dexId} — plataforma legítima de Solana`);
+                        } else if (tokenData.dexId && !knownDexes.includes(tokenData.dexId)) {
+                            riskScore -= 8;
+                            redFlags.push(`⚠️ Par em DEX menos conhecida (${tokenData.dexId})`);
+                        }
+
+                        // ── BOOST ──
+                        const boostAmt = tokenData.boosts?.active || 0;
+                        const hasAds = !!(pair.info?.header);
+                        if (boostAmt > 400) {
+                            riskScore -= 25;
+                            redFlags.push(`🚨 Boost excessivo (${boostAmt}x) — sinal clássico de farm/dump`);
+                            if (hasAds) {
+                                riskScore -= 10;
+                                redFlags.push('🚨 Boost alto + banner pago = combo suspeito de farm');
+                            }
+                        } else if (boostAmt > 0) {
+                            greenFlags.push(`🚀 ${boostAmt}x Boost ativo na DEX`);
+                        }
+
+                        // ── DEX PAGO / BANNER ── (mesma coisa, contar só uma vez)
+                        const isDexPaid = !!(pair.info?.imageUrl || pair.info?.header || pair.info?.socials?.length > 0);
+                        if (isDexPaid && boostAmt <= 400) {
+                            riskScore += 10;
+                            greenFlags.push('💳 Perfil pago na DEX — projeto investiu na visibilidade');
+                        }
+
+                        // ── LINKS SOCIAIS ──
+                        if (tokenData.links.telegram) greenFlags.push('📣 Telegram verificado na DEX');
+                        if (tokenData.links.twitter)  greenFlags.push('🐦 Twitter/X verificado na DEX');
+                        if (tokenData.links.website)  greenFlags.push('🌐 Website verificado na DEX');
+                        if (!tokenData.links.telegram && !tokenData.links.twitter && !tokenData.links.website) {
+                            riskScore -= 10;
+                            redFlags.push('⚠️ Sem links sociais na DEX');
+                        }
+
+                        // ── HOLDERS / BAG MÉDIA ──
+                        if (tokenData.holders && tokenData.holders > 0 && tokenData.marketCap > 0) {
+                            const avgBagUsd = tokenData.marketCap / tokenData.holders;
+                            tokenData.avgBagUsd = avgBagUsd;
+                            if (avgBagUsd > tokenData.holders) {
+                                riskScore -= 15;
+                                redFlags.push(`🚨 Bag média ($${avgBagUsd.toFixed(0)}) > nº de holders (${tokenData.holders}) — concentração suspeita`);
+                            }
+                            if (tokenData.holders > 1000 && avgBagUsd < 50) {
+                                riskScore -= 10;
+                                redFlags.push(`⚠️ ${tokenData.holders.toLocaleString()} holders mas bag média de apenas $${avgBagUsd.toFixed(0)} — possível spam de wallets`);
+                            }
+                            if (tokenData.holders > 500 && avgBagUsd >= 50 && avgBagUsd <= tokenData.holders) {
+                                greenFlags.push(`✅ Distribuição saudável — ${tokenData.holders.toLocaleString()} holders, bag média $${avgBagUsd.toFixed(0)}`);
+                            }
+                        }
+
+                        tokenData.holders = tokenData.holders || null;
+                        tokenData.riskScore = Math.max(0, Math.min(100, riskScore));
+                        tokenData.redFlags = redFlags;
+                        tokenData.greenFlags = greenFlags;
+                        tokenData.riskLevel = riskScore >= 70 ? 'low' : riskScore >= 50 ? 'medium' : riskScore >= 30 ? 'high' : 'extreme';
+                        
+                        setAnalysis(tokenData);
+                        showToast('Token analisado!', 'success');
+
+                    } else {
+                        showToast('Token not found', 'error');
+                    }
+                } catch (error) {
+                    showToast('Error: ' + error.message, 'error');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const registerTrade = () => {
+                // Open custom buy modal instead of prompt
+                setBuyModal({ type: 'ape' });
+            };
+
+            const confirmApe = (amount, reason) => {
+                if (isNaN(amount) || amount <= 0 || amount > user.balance) {
+                    showToast('Saldo insuficiente!', 'error'); return;
+                }
+                const newTrade = {
+                    id: Date.now().toString(),
+                    tokenAddress: analysis.address,
+                    tokenName: analysis.name,
+                    tokenSymbol: analysis.symbol,
+                    status: 'active',
+                    openedAt: new Date().toISOString(),
+                    buyReason: reason,
+                    entries: [{ price: analysis.price, amountSOL: amount, timestamp: new Date().toISOString() }],
+                    totalInvested: amount,
+                    avgEntryPrice: analysis.price,
+                    partialExits: []
+                };
+                const updatedUser = { ...user, balance: user.balance - amount, trades: [...(user.trades || []), newTrade] };
+                updatedUser.badges = checkBadges(updatedUser);
+                setUser(updatedUser);
+                setBuyModal(null);
+                showToast(`🚀 APE! ${amount.toFixed(2)} SOL em ${analysis.symbol}`, 'success');
+                if (updatedUser.trades.length === 1) setTimeout(() => showToast('🎯 Primeiro trade!', 'success'), 800);
+                setAnalysis(null);
+                setActiveTab('portfolio');
+            };
+
+            // ADVANCED TRADING FUNCTIONS
+            const handleDCA = (trade) => {
+                setBuyModal({ type: 'dca', trade });
+            };
+
+            const confirmDCA = async (amount, trade) => {
+                if (isNaN(amount) || amount <= 0 || amount > user.balance) {
+                    showToast('Saldo insuficiente!', 'error'); return;
+                }
+                setBuyModal(null);
+                try {
+                    const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${trade.tokenAddress}`);
+                    const data = await res.json();
+                    const currentPrice = data.pairs?.[0] ? parseFloat(data.pairs[0].priceUsd) : trade.avgEntryPrice;
+                    const newEntry = { price: currentPrice, amountSOL: amount, timestamp: new Date().toISOString() };
+                    const updatedEntries = [...trade.entries, newEntry];
+                    const totalInvested = trade.totalInvested + amount;
+                    const avgEntryPrice = updatedEntries.reduce((sum, e) => sum + (e.price * e.amountSOL), 0) / totalInvested;
+                    const updatedUser = {
+                        ...user, balance: user.balance - amount,
+                        trades: user.trades.map(t => t.id === trade.id ? { ...t, entries: updatedEntries, totalInvested, avgEntryPrice } : t)
+                    };
+                    updatedUser.badges = checkBadges(updatedUser);
+                    setUser(updatedUser);
+                    showToast(`📉 DCA adicionado! +${amount.toFixed(2)} SOL`, 'success');
+                } catch (error) { showToast('Erro ao buscar preço', 'error'); }
+            };
+
+            const handlePartialSell = (trade) => {
+                setBuyModal({ type: 'partial', trade });
+            };
+
+            const confirmPartialSell = async (percentage, trade, sellReason) => {
+                if (isNaN(percentage) || percentage <= 0 || percentage > 100) {
+                    showToast('Percentual inválido!', 'error'); return;
+                }
+                setBuyModal(null);
+                try {
+                    const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${trade.tokenAddress}`);
+                    const data = await res.json();
+                    const currentPrice = data.pairs?.[0] ? parseFloat(data.pairs[0].priceUsd) : trade.avgEntryPrice;
+                    
+                    const sellAmount = trade.totalInvested * (percentage / 100);
+                    const priceChange = ((currentPrice - trade.avgEntryPrice) / trade.avgEntryPrice) * 100;
+                    const pnl = sellAmount * (priceChange / 100);
+                    const returned = sellAmount + pnl;
+                    
+                    const remainingInvested = trade.totalInvested - sellAmount;
+                    
+                    if (remainingInvested < 0.01) {
+                        return handleCloseTrade(trade.id);
+                    }
+                    
+                    const updatedUser = {
+                        ...user,
+                        balance: user.balance + returned,
+                        trades: user.trades.map(t => 
+                            t.id === trade.id 
+                                ? { 
+                                    ...t, 
+                                    totalInvested: remainingInvested,
+                                    partialExits: [...(t.partialExits || []), {
+                                        percentage,
+                                        soldSOL: sellAmount,
+                                        price: currentPrice,
+                                        pnl,
+                                        sellReason: sellReason || '—',
+                                        timestamp: new Date().toISOString()
+                                    }]
+                                }
+                                : t
+                        )
+                    };
+                    
+                    setUser(updatedUser);
+                    showToast(`Vendido ${percentage}%! P&L: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(3)} SOL`, pnl >= 0 ? 'success' : 'warning');
+                } catch (error) {
+                    showToast('Erro ao buscar preço', 'error');
+                }
+            };
+
+            const handleCloseTrade = (tradeId) => {
+                const trade = user.trades.find(t => t.id === tradeId);
+                if (trade) setCloseModal(trade);
+            };
+
+            const confirmCloseTrade = async (tradeId, sellReason) => {
+                setCloseModal(null);
+                const trade = user.trades.find(t => t.id === tradeId);
+                if (!trade) return;
+                try {
+                    const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${trade.tokenAddress}`);
+                    const data = await res.json();
+                    const currentPrice = data.pairs?.[0] ? parseFloat(data.pairs[0].priceUsd) : trade.avgEntryPrice;
+                    
+                    const priceChange = ((currentPrice - trade.avgEntryPrice) / trade.avgEntryPrice) * 100;
+                    const partialPnl = (trade.partialExits || []).reduce((sum, exit) => sum + exit.pnl, 0);
+                    const remainingPnl = trade.totalInvested * (priceChange / 100);
+                    const totalPnl = partialPnl + remainingPnl;
+                    const returned = trade.totalInvested + remainingPnl;
+                    
+                    const updatedUser = {
+                        ...user,
+                        balance: user.balance + returned,
+                        trades: user.trades.map(t => 
+                            t.id === tradeId 
+                                ? { ...t, status: 'closed', exitPrice: currentPrice, totalPnl, sellReason, closedAt: new Date().toISOString() }
+                                : t
+                        )
+                    };
+                    
+                    if (totalPnl > 0) {
+                        updatedUser.currentStreak = (updatedUser.currentStreak || 0) + 1;
+                        if (updatedUser.currentStreak === 3) setTimeout(() => addXP('HOT_STREAK_3', '3 Win Streak!'), 1000);
+                        if (updatedUser.currentStreak === 5) setTimeout(() => addXP('HOT_STREAK_5', '5 Win Streak!'), 1000);
+                        if (updatedUser.currentStreak === 10) setTimeout(() => addXP('HOT_STREAK_10', '10 Win Streak!!!'), 1000);
+                    } else {
+                        updatedUser.currentStreak = 0;
+                    }
+                    
+                    updatedUser.badges = checkBadges(updatedUser);
+                    setUser(updatedUser);
+                    showToast(`Posição fechada! P&L: ${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(3)} SOL`, totalPnl >= 0 ? 'success' : 'warning');
+                    
+                    if (totalPnl !== 0) setTimeout(() => addXP(calcXPFromPnL(totalPnl), `${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(3)} SOL`), 500);
+                } catch (error) {
+                    showToast('Erro ao buscar preço', 'error');
+                }
+            };
+
+            const updateTradePrice = async (trade) => {
+                try {
+                    const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${trade.tokenAddress}`);
+                    const data = await res.json();
+                    if (data.pairs?.[0]) {
+                        const currentPrice = parseFloat(data.pairs[0].priceUsd);
+                        const priceChange = ((currentPrice - trade.avgEntryPrice) / trade.avgEntryPrice) * 100;
+                        
+                        showToast(
+                            `${trade.tokenSymbol}: $${currentPrice.toFixed(8)} (${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(1)}%)`,
+                            priceChange >= 0 ? 'success' : 'warning'
+                        );
+                        
+                        const updatedUser = {
+                            ...user,
+                            trades: user.trades.map(t => 
+                                t.id === trade.id 
+                                    ? { ...t, currentPrice, lastUpdate: Date.now() }
+                                    : t
+                            )
+                        };
+                        setUser(updatedUser);
+                    }
+                } catch (error) {
+                    showToast('Error updating price', 'error');
+                }
+            };
+
+
+            const handleVote = (id) => {
+                const already = userVotes[id];
+                const newVotes = { ...userVotes };
+                if (already) { delete newVotes[id]; } else { newVotes[id] = true; }
+                setNarratives(cur => {
+                    const upd = cur.map(n => n.id !== id ? n : { ...n, votes: already ? Math.max(0, n.votes-1) : n.votes+1 });
+                    localStorage.setItem('helmNarratives', JSON.stringify(upd));
+                    return upd;
+                });
+                setUserVotes(newVotes);
+                localStorage.setItem('helmUserVotes', JSON.stringify(newVotes));
+            };
+
+            const currentLevel = getCurrentLevel(user?.xp || 0);
+            const currentLevelData = LEVELS[Math.max(0, currentLevel - 1)];
+            const nextLevelXP = getNextLevelXP(user?.xp || 0);
+            const currentLevelXP = currentLevel > 1 ? LEVELS[currentLevel - 2].xp : 0;
+            const xpProgress = user ? ((user.xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100 : 0;
+
+            // ── TRADER PROFILE COMPUTATION ──────────────────────
+            const traderProfile = (() => {
+                if (!user) return { closed:[], active:[], wins:[], losses:[], totalPnl:0, winRate:0, avgWin:0, avgLoss:0, rr:0, topBuyReason:null, sellReasons:{}, buyReasons:{}, avgHold:0, curLossStreak:0, trades24h:0, isOvertrading:false, archetype:'🌱 Iniciante', archetypeDesc:'' };
+                const all    = user.trades || [];
+                const closed = all.filter(t => t.status === 'closed');
+                const active = all.filter(t => t.status === 'active');
+                const wins   = closed.filter(t => (t.totalPnl||0) > 0);
+                const losses = closed.filter(t => (t.totalPnl||0) < 0);
+                const totalPnl   = closed.reduce((s,t) => s+(t.totalPnl||0), 0);
+                const winRate    = closed.length > 0 ? (wins.length/closed.length)*100 : 0;
+                const avgWin     = wins.length   > 0 ? wins.reduce((s,t)=>s+(t.totalPnl||0),0)/wins.length : 0;
+                const avgLoss    = losses.length > 0 ? Math.abs(losses.reduce((s,t)=>s+(t.totalPnl||0),0)/losses.length) : 0;
+                const rr         = avgLoss > 0 ? avgWin/avgLoss : 0;
+
+                // buy reasons breakdown
+                const buyReasons = {};
+                all.forEach(t => { if (t.buyReason) buyReasons[t.buyReason] = (buyReasons[t.buyReason]||0)+1; });
+                const topBuyReason = Object.entries(buyReasons).sort((a,b)=>b[1]-a[1])[0]?.[0] || null;
+
+                // sell reasons breakdown
+                const sellReasons = {};
+                closed.forEach(t => { if (t.sellReason) sellReasons[t.sellReason] = (sellReasons[t.sellReason]||0)+1; });
+
+                // timing: avg hold time in hours
+                const holdTimes = closed.filter(t=>t.closedAt && t.createdAt).map(t=>(new Date(t.closedAt)-new Date(t.createdAt))/3600000);
+                const avgHold = holdTimes.length > 0 ? holdTimes.reduce((s,v)=>s+v,0)/holdTimes.length : 0;
+
+                // consecutive losses streak
+                let curLossStreak = 0;
+                for (let i = closed.length-1; i >= 0; i--) {
+                    if ((closed[i].totalPnl||0) < 0) curLossStreak++; else break;
+                }
+
+                // overtrading: >5 trades opened in last 24h
+                const now = Date.now();
+                const trades24h = all.filter(t => (now - new Date(t.createdAt)) < 86400000).length;
+                const isOvertrading = trades24h >= 5;
+
+                // archetype
+                let archetype = '🌱 Iniciante';
+                let archetypeDesc = 'Ainda construindo histórico de trades.';
+                if (closed.length >= 5) {
+                    if (winRate >= 60 && rr >= 1.5)          { archetype='🎯 Sniper';         archetypeDesc='Alta precisão e boa relação risco/retorno. Você entra pouco mas quando entra, acerta.'; }
+                    else if (winRate >= 60 && avgHold < 2)   { archetype='⚡ Scalper';        archetypeDesc='Você opera rápido e com boa taxa de acerto. Cuidado com taxas e slippage.'; }
+                    else if (winRate >= 50 && rr >= 1)       { archetype='📊 Consistente';    archetypeDesc='Bom equilíbrio entre acertos e perdas. Você está no caminho certo.'; }
+                    else if (wins.length > 0 && losses.length > wins.length*2) { archetype='🎰 Apostador';  archetypeDesc='Muitas perdas em relação aos ganhos. Considere ser mais seletivo.'; }
+                    else if (isOvertrading || trades24h >= 4) { archetype='🔁 Overtrader';    archetypeDesc='Você opera com muita frequência. Mais trades não significa mais lucro.'; }
+                    else if (topBuyReason === '🔥 FOMO')     { archetype='😱 FOMO Trader';    archetypeDesc='Maioria das entradas por FOMO. Trabalhe em ter mais critérios antes de entrar.'; }
+                    else if (avgHold > 24)                   { archetype='💎 Holder';         archetypeDesc='Você mantém posições por bastante tempo. Útil em tendências, arriscado em memecoins.'; }
+                    else                                      { archetype='🔄 Em Desenvolvimento'; archetypeDesc='Padrão ainda se formando. Continue operando e analisando seus resultados.'; }
+                }
+
+                return { closed, active, wins, losses, totalPnl, winRate, avgWin, avgLoss, rr,
+                         topBuyReason, sellReasons, buyReasons, avgHold, curLossStreak,
+                         trades24h, isOvertrading, archetype, archetypeDesc };
+            })();
+
+            // ── LOSS STREAK ALERT ──
+            const LOSS_TIPS = [
+                '🧘 Respira. Cada loss é uma lição, não um fracasso. Revise a entrada antes do próximo trade.',
+                '📉 Sequência de perdas? Reduza o tamanho da posição. Preserve o capital primeiro.',
+                '🔍 Foram rugs? FOMO? Entradas muito cedo? O diagnóstico vale mais que o lucro.',
+                '⏸️ Considere uma pausa. Operar no prejuízo emocional aumenta os erros.',
+                '📊 Só entre em tokens que passam pela sua checklist completa.',
+                '💡 Losses consecutivos indicam um padrão. Escreva o motivo de cada entrada.',
+                '🎯 Menos trades, mais qualidade. Você não precisa estar sempre no mercado.',
+            ];
+            useEffect(() => {
+                if (traderProfile.curLossStreak >= 2 && traderProfile.curLossStreak % 2 === 0) {
+                    const tip = LOSS_TIPS[(traderProfile.curLossStreak/2 - 1) % LOSS_TIPS.length];
+                    setTimeout(() => showToast(`💔 ${traderProfile.curLossStreak} losses seguidos`, 'warning'), 300);
+                    setTimeout(() => showToast(tip, 'warning'), 3800);
+                }
+            }, [traderProfile.curLossStreak]);
+
+            // ── OVERTRADING ALERT ──
+            useEffect(() => {
+                if (traderProfile.isOvertrading) {
+                    setTimeout(() => showToast('⚠️ OVERTRADING — 5+ trades em 24h. Respira!', 'warning'), 500);
+                }
+            }, [traderProfile.trades24h]);
+
+            return (
+                <div>
+                    {!user && (
+                        <div>
+                            <div className="header"><div className="logo">⚓ HELM</div></div>
+                            <div className="container">
+                                <div className="card" style={{textAlign:'center'}}>
+                                    <div style={{fontSize:'4rem', marginBottom:'20px'}}>⚓</div>
+                                    <h2>Take the Helm</h2>
+                                    <p style={{color:'var(--text-secondary)', margin:'20px 0'}}>Paper trade Solana memecoins without losing SOL</p>
+                                    <button onClick={() => handleLogin('google')}>🔷 Login with Google</button>
+                                    <button onClick={() => handleLogin('apple')}>🍎 Login with Apple</button>
+                                    <button onClick={() => handleLogin('email')}>📧 Login with Email</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {user && <div>
+                    <div className="header">
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px'}}>
+                            <div>
+                                <div className="logo">⚓ HELM</div>
+                            </div>
+                            <div style={{display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap'}}>
+                                <div className="level-badge">
+                                    {currentLevelData.icon} Level {currentLevel} - {currentLevelData.name}
+                                </div>
+                                {user.currentStreak > 0 && (
+                                    <div className="streak-indicator">
+                                        🔥 {user.currentStreak} Streak
+                                    </div>
+                                )}
+                                <select 
+                                    className="theme-selector"
+                                    value={theme}
+                                    onChange={(e) => applyTheme(e.target.value)}
+                                >
+                                    <option value="default">🌊 Navy</option>
+                                    <option value="light">☀️ Light</option>
+                                    <option value="neon">⚡ Neon</option>
+                                </select>
+                                <div style={{padding: '10px 20px', background: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border)'}}>
+                                    💰 {user.balance.toFixed(2)} SOL
+                                </div>
+                                <button onClick={() => {
+                                    if (confirm('Logout?')) {
+                                        localStorage.removeItem('helmUser');
+                                        setUser(null);
+                                        showToast('Logged out', 'success');
+                                    }
+                                }} className="danger">🚪</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* TRENDING BAR */}
+                    {(() => {
+                        const top3 = [...narratives].sort((a,b)=>b.votes-a.votes).slice(0,3);
+                        return (
+                            <div style={{background:'var(--bg-card)', borderBottom:'1px solid var(--border)', padding:'7px 0'}}>
+                                <div className="container" style={{display:'flex', alignItems:'center', gap:'10px', flexWrap:'wrap'}}>
+                                    <span style={{color:'var(--accent)', fontSize:'0.73rem', fontWeight:'bold', letterSpacing:'1px', whiteSpace:'nowrap'}}>🔥 TRENDING</span>
+                                    {top3.map((n,i) => (
+                                        <div key={n.id} onClick={()=>setActiveTab('narratives')} style={{
+                                            display:'flex', alignItems:'center', gap:'5px', cursor:'pointer',
+                                            padding:'3px 10px', borderRadius:'20px', fontSize:'0.78rem',
+                                            background:'var(--bg-primary)',
+                                            border:`1px solid ${i===0?'#fbbf24':i===1?'#94a3b8':'#cd7f32'}`,
+                                        }}>
+                                            <span>{['🥇','🥈','🥉'][i]}</span>
+                                            <span style={{fontWeight:'bold'}}>{n.emoji} {n.title}</span>
+                                            <span style={{color:'var(--text-secondary)'}}>· {n.votes}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })()}
+
+                    <div className="container">
+                        <div className="tabs">
+                            <div className={`tab ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
+                                👤 Profile
+                            </div>
+                            <div className={`tab ${activeTab === 'analysis' ? 'active' : ''}`} onClick={() => setActiveTab('analysis')}>
+                                🔍 Analysis
+                            </div>
+                            <div className={`tab ${activeTab === 'portfolio' ? 'active' : ''}`} onClick={() => setActiveTab('portfolio')}>
+                                📊 Portfolio
+                            </div>
+                            <div className={`tab ${activeTab === 'narratives' ? 'active' : ''}`} onClick={() => setActiveTab('narratives')}>
+                                🌊 Narrativas
+                            </div>
+                            <div className={`tab ${activeTab === 'badges' ? 'active' : ''}`} onClick={() => setActiveTab('badges')}>
+                                🏆 Badges
+                            </div>
+                            <div className={`tab ${activeTab === 'ranking' ? 'active' : ''}`} onClick={() => setActiveTab('ranking')}>
+                                🥇 Ranking
+                            </div>
+                            <div className={`tab ${activeTab === 'community' ? 'active' : ''}`} onClick={() => setActiveTab('community')}>
+                                💬 Comunidade
+                            </div>
+                        </div>
+
+                        {activeTab === 'profile' && (
+                            <div className="fade-in">
+
+                                {/* ── OVERTRADING BANNER ── */}
+                                {traderProfile.isOvertrading && (
+                                    <div style={{
+                                        padding:'14px 18px', borderRadius:'12px', marginBottom:'14px',
+                                        background:'rgba(245,158,11,0.1)', border:'2px solid var(--warning)',
+                                        display:'flex', gap:'12px', alignItems:'flex-start'
+                                    }}>
+                                        <span style={{fontSize:'1.6rem'}}>⚠️</span>
+                                        <div>
+                                            <div style={{fontWeight:'bold', color:'var(--warning)', marginBottom:'4px'}}>OVERTRADING DETECTADO</div>
+                                            <div style={{fontSize:'0.85rem', color:'var(--text-secondary)', lineHeight:1.5}}>
+                                                Você abriu <strong style={{color:'var(--warning)'}}>{traderProfile.trades24h} trades nas últimas 24h</strong>. Mais trades não significa mais lucro — geralmente o contrário. Considere uma pausa e seja mais seletivo.
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── LOSS STREAK BANNER ── */}
+                                {traderProfile.curLossStreak >= 3 && (
+                                    <div style={{
+                                        padding:'14px 18px', borderRadius:'12px', marginBottom:'14px',
+                                        background:'rgba(239,68,68,0.08)', border:'1px solid var(--danger)',
+                                        display:'flex', gap:'12px', alignItems:'flex-start'
+                                    }}>
+                                        <span style={{fontSize:'1.6rem'}}>💔</span>
+                                        <div>
+                                            <div style={{fontWeight:'bold', color:'var(--danger)', marginBottom:'4px'}}>{traderProfile.curLossStreak} LOSSES CONSECUTIVOS</div>
+                                            <div style={{fontSize:'0.85rem', color:'var(--text-secondary)', lineHeight:1.5}}>
+                                                {traderProfile.curLossStreak >= 5
+                                                    ? 'Sequência grave. Pause agora, analise os padrões, só volte com a mente limpa.'
+                                                    : 'Reduza o tamanho das posições e revise seus critérios de entrada antes de continuar.'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── ARCHETYPE CARD ── */}
+                                <div style={{
+                                    padding:'20px', borderRadius:'14px', marginBottom:'14px',
+                                    background:'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1))',
+                                    border:'1px solid rgba(139,92,246,0.3)'
+                                }}>
+                                    <div style={{display:'flex', alignItems:'center', gap:'14px'}}>
+                                        <div style={{fontSize:'2.8rem', lineHeight:1}}>{traderProfile.archetype.split(' ')[0]}</div>
+                                        <div>
+                                            <div style={{fontSize:'0.75rem', color:'var(--text-secondary)', textTransform:'uppercase', letterSpacing:'1px', marginBottom:'4px'}}>Perfil de Trader</div>
+                                            <div style={{fontSize:'1.3rem', fontWeight:'bold', color:'var(--text-primary)'}}>{traderProfile.archetype.replace(/^.+?\s/,'')}</div>
+                                            <div style={{fontSize:'0.85rem', color:'var(--text-secondary)', marginTop:'4px', lineHeight:1.5}}>{traderProfile.archetypeDesc}</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Quick links */}
+                                    <div style={{display:'flex', gap:'8px', marginTop:'16px', flexWrap:'wrap'}}>
+                                        <a href="https://dexscreener.com" target="_blank" rel="noreferrer" style={{
+                                            display:'flex', alignItems:'center', gap:'6px', padding:'8px 14px',
+                                            borderRadius:'8px', textDecoration:'none', fontWeight:'bold', fontSize:'0.82rem',
+                                            background:'rgba(16,185,129,0.12)', border:'1px solid rgba(16,185,129,0.35)', color:'var(--success)'
+                                        }}>📈 DexScreener</a>
+                                        <a href="https://x.com" target="_blank" rel="noreferrer" style={{
+                                            display:'flex', alignItems:'center', gap:'6px', padding:'8px 14px',
+                                            borderRadius:'8px', textDecoration:'none', fontWeight:'bold', fontSize:'0.82rem',
+                                            background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.2)', color:'var(--text-primary)'
+                                        }}>🐦 Twitter/X</a>
+                                        <a href="https://t.me" target="_blank" rel="noreferrer" style={{
+                                            display:'flex', alignItems:'center', gap:'6px', padding:'8px 14px',
+                                            borderRadius:'8px', textDecoration:'none', fontWeight:'bold', fontSize:'0.82rem',
+                                            background:'rgba(0,136,204,0.12)', border:'1px solid rgba(0,136,204,0.4)', color:'#29b6f6'
+                                        }}>📣 Telegram</a>
+                                    </div>
+                                </div>
+
+                                {/* ── XP + LEVEL ── */}
+                                <div className="card" style={{marginBottom:'10px'}}>
+                                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'10px'}}>
+                                        <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                                            <span style={{fontSize:'1.6rem'}}>{currentLevelData.icon}</span>
+                                            <div>
+                                                <div style={{fontWeight:'bold'}}>{currentLevelData.name}</div>
+                                                <div style={{fontSize:'0.78rem', color:'var(--text-secondary)'}}>Level {currentLevel}</div>
+                                            </div>
+                                        </div>
+                                        <div style={{textAlign:'right'}}>
+                                            <div style={{fontWeight:'bold', color:'var(--accent)'}}>{(user.xp||0).toLocaleString()} XP</div>
+                                            <div style={{fontSize:'0.78rem', color:'var(--text-secondary)'}}>→ {nextLevelXP.toLocaleString()} XP</div>
+                                        </div>
+                                    </div>
+                                    <div className="xp-bar-container">
+                                        <div className="xp-bar" style={{width:`${Math.min(xpProgress,100)}%`}}>
+                                            {xpProgress > 15 && `${Math.floor(xpProgress)}%`}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* ── STATS GRID ── */}
+                                <div className="stat-grid" style={{marginBottom:'10px'}}>
+                                    <div className="stat-card">
+                                        <div className="stat-value">{(user.balance||0).toFixed(2)}</div>
+                                        <div className="stat-label">SOL Saldo</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-value" style={{color: traderProfile.totalPnl >= 0 ? 'var(--success)' : 'var(--danger)'}}>
+                                            {traderProfile.totalPnl >= 0 ? '+' : ''}{traderProfile.totalPnl.toFixed(3)}
+                                        </div>
+                                        <div className="stat-label">P&L Total (SOL)</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-value" style={{color: traderProfile.winRate >= 50 ? 'var(--success)' : 'var(--danger)'}}>
+                                            {traderProfile.winRate.toFixed(0)}%
+                                        </div>
+                                        <div className="stat-label">Win Rate</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-value" style={{color: traderProfile.rr >= 1 ? 'var(--success)' : 'var(--warning)'}}>
+                                            {traderProfile.rr.toFixed(2)}×
+                                        </div>
+                                        <div className="stat-label">Risco/Retorno</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-value">{traderProfile.closed.length}</div>
+                                        <div className="stat-label">Trades Fechados</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-value">{traderProfile.active.length}</div>
+                                        <div className="stat-label">Posições Abertas</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-value" style={{color:'var(--success)'}}>{traderProfile.wins.length}</div>
+                                        <div className="stat-label">Wins</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-value" style={{color:'var(--danger)'}}>{traderProfile.losses.length}</div>
+                                        <div className="stat-label">Losses</div>
+                                    </div>
+                                </div>
+
+                                {/* ── DETAILED STATS ── */}
+                                {traderProfile.closed.length >= 2 && (
+                                    <div className="card" style={{marginBottom:'10px'}}>
+                                        <h3 style={{marginBottom:'14px', fontSize:'0.95rem'}}>📐 Métricas Detalhadas</h3>
+                                        {[
+                                            { label:'Ganho médio por win',    val:`+${traderProfile.avgWin.toFixed(4)} SOL`,   color:'var(--success)' },
+                                            { label:'Perda média por loss',   val:`-${traderProfile.avgLoss.toFixed(4)} SOL`,  color:'var(--danger)'  },
+                                            { label:'Tempo médio de hold',    val: traderProfile.avgHold < 1 ? `${Math.round(traderProfile.avgHold*60)}min` : `${traderProfile.avgHold.toFixed(1)}h`, color:'var(--text-primary)' },
+                                            { label:'Trades nas últimas 24h', val: traderProfile.trades24h,                    color: traderProfile.isOvertrading ? 'var(--warning)' : 'var(--text-primary)' },
+                                            { label:'Sequência de losses atual', val: traderProfile.curLossStreak,             color: traderProfile.curLossStreak >= 3 ? 'var(--danger)' : 'var(--text-primary)' },
+                                        ].map(s => (
+                                            <div key={s.label} style={{display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid var(--border)', fontSize:'0.88rem'}}>
+                                                <span style={{color:'var(--text-secondary)'}}>{s.label}</span>
+                                                <span style={{fontWeight:'bold', color:s.color}}>{s.val}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* ── BUY REASONS ── */}
+                                {Object.keys(traderProfile.buyReasons).length > 0 && (
+                                    <div className="card" style={{marginBottom:'10px'}}>
+                                        <h3 style={{marginBottom:'12px', fontSize:'0.95rem'}}>🧠 Por que você entra?</h3>
+                                        {Object.entries(traderProfile.buyReasons).sort((a,b)=>b[1]-a[1]).map(([reason, count]) => {
+                                            const pct = Math.round((count / (user.trades||[]).length)*100);
+                                            return (
+                                                <div key={reason} style={{marginBottom:'8px'}}>
+                                                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:'3px', fontSize:'0.85rem'}}>
+                                                        <span>{reason}</span>
+                                                        <span style={{color:'var(--text-secondary)'}}>{count}× ({pct}%)</span>
+                                                    </div>
+                                                    <div style={{height:'6px', background:'var(--bg-primary)', borderRadius:'3px', overflow:'hidden'}}>
+                                                        <div style={{height:'100%', width:`${pct}%`, background:'var(--accent)', borderRadius:'3px', transition:'width 0.5s'}}/>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                        {traderProfile.topBuyReason === '🔥 FOMO' && (
+                                            <div style={{marginTop:'10px', fontSize:'0.8rem', color:'var(--warning)', padding:'8px', background:'rgba(245,158,11,0.08)', borderRadius:'8px'}}>
+                                                ⚠️ FOMO é sua principal razão de entrada. Isso geralmente leva a comprar no topo.
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* ── CHARTS ── */}
+                                {traderProfile.closed.length > 0 && (
+                                    <div>
+                                        <div className="card" style={{marginBottom:'10px'}}>
+                                            <h3 style={{marginBottom:'15px'}}>📈 P&L — Últimos 7 dias</h3>
+                                            <div className="chart-container"><canvas ref={pnlChartRef}></canvas></div>
+                                        </div>
+                                        <div className="card">
+                                            <h3 style={{marginBottom:'15px'}}>🎯 Win Rate</h3>
+                                            <div className="chart-container"><canvas ref={winRateChartRef}></canvas></div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {traderProfile.closed.length === 0 && (
+                                    <div className="card" style={{textAlign:'center', padding:'40px 20px', color:'var(--text-secondary)'}}>
+                                        <div style={{fontSize:'2.5rem', marginBottom:'12px'}}>🌱</div>
+                                        <div style={{fontWeight:'bold', marginBottom:'6px'}}>Histórico vazio</div>
+                                        <div style={{fontSize:'0.85rem'}}>Faça seu primeiro trade para começar a traçar seu perfil.</div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === 'analysis' && (
+                            <div className="fade-in">
+                                <h2>🔍 Token Analysis</h2>
+                                <div className="card">
+                                    <label style={{display:'block', marginBottom:'10px', fontWeight:'bold'}}>
+                                        Token Address (Solana)
+                                    </label>
+                                    <div style={{display:'flex', gap:'8px', marginBottom:'10px'}}>
+                                        <input
+                                            ref={tokenInputRef}
+                                            value={tokenAddress}
+                                            onChange={(e) => setTokenAddress(e.target.value)}
+                                            onFocus={async () => {
+                                                if (tokenAddress) return;
+                                                try {
+                                                    const text = await navigator.clipboard.readText();
+                                                    const match = text.trim().match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
+                                                    if (match || text.trim().length >= 32) {
+                                                        setTokenAddress(match ? match[0] : text.trim());
+                                                    }
+                                                } catch(e) {}
+                                            }}
+                                            onPaste={(e) => {
+                                                const pasted = e.clipboardData?.getData('text') || '';
+                                                const match = pasted.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
+                                                if (match) { e.preventDefault(); setTokenAddress(match[0]); }
+                                            }}
+                                            placeholder="Clique para colar o endereço..."
+                                            style={{flex:1}}
+                                        />
+                                    </div>
+                                    <button onClick={analyzeToken} disabled={loading} className="success">
+                                        {loading ? '⏳ Analisando...' : '🔍 Analisar'}
+                                    </button>
+                                </div>
+
+                                {analysis && (
+                                    <div className="card">
+                                        {/* Header */}
+                                        <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:'10px'}}>
+                                            <div>
+                                                <h3 style={{fontSize:'1.2rem'}}>{analysis.name} <span style={{color:'var(--text-secondary)'}}>({analysis.symbol})</span></h3>
+                                                <p style={{fontSize:'0.8rem', color:'var(--text-secondary)', marginTop:'2px', wordBreak:'break-all'}}>{analysis.address}</p>
+                                            </div>
+                                            <div style={{
+                                                padding:'8px 16px', borderRadius:'10px', fontWeight:'bold', fontSize:'1rem', whiteSpace:'nowrap',
+                                                background: analysis.riskLevel === 'low' ? 'rgba(16,185,129,0.15)' : analysis.riskLevel === 'medium' ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)',
+                                                border: `1px solid ${analysis.riskLevel === 'low' ? 'var(--success)' : analysis.riskLevel === 'medium' ? 'var(--warning)' : 'var(--danger)'}`,
+                                                color: analysis.riskLevel === 'low' ? 'var(--success)' : analysis.riskLevel === 'medium' ? 'var(--warning)' : 'var(--danger)'
+                                            }}>
+                                                {analysis.riskLevel === 'low' && '✅ BAIXO RISCO'}
+                                                {analysis.riskLevel === 'medium' && '⚡ RISCO MÉDIO'}
+                                                {analysis.riskLevel === 'high' && '🚨 ALTO RISCO'}
+                                                {analysis.riskLevel === 'extreme' && '☠️ EXTREMO'}
+                                                {' '}· {analysis.riskScore}/100
+                                            </div>
+                                        </div>
+
+                                        {/* Stats */}
+                                        <div className="stat-grid" style={{marginTop:'16px'}}>
+                                            <div className="stat-card">
+                                                <div className="stat-value" style={{fontSize:'0.95rem'}}>${analysis.price.toFixed(8)}</div>
+                                                <div className="stat-label">Preço</div>
+                                            </div>
+                                            <div className="stat-card">
+                                                <div className="stat-value" style={{fontSize:'0.95rem'}}>${(analysis.liquidity/1000).toFixed(1)}k</div>
+                                                <div className="stat-label">Liquidez</div>
+                                            </div>
+                                            <div className="stat-card">
+                                                <div className="stat-value" style={{fontSize:'0.95rem'}}>${(analysis.volume24h/1000).toFixed(1)}k</div>
+                                                <div className="stat-label">Volume 24h</div>
+                                            </div>
+                                            {analysis.marketCap > 0 && (
+                                                <div className="stat-card">
+                                                    <div className="stat-value" style={{fontSize:'0.95rem'}}>${(analysis.marketCap/1000).toFixed(0)}k</div>
+                                                    <div className="stat-label">FDV/MC</div>
+                                                </div>
+                                            )}
+                                            {analysis.holders && (
+                                                <div className="stat-card">
+                                                    <div className="stat-value" style={{fontSize:'0.95rem'}}>{analysis.holders.toLocaleString()}</div>
+                                                    <div className="stat-label">Holders</div>
+                                                </div>
+                                            )}
+                                            {analysis.avgBagUsd && (
+                                                <div className="stat-card">
+                                                    <div className="stat-value" style={{fontSize:'0.95rem'}}>${analysis.avgBagUsd.toFixed(0)}</div>
+                                                    <div className="stat-label">Bag Média</div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Red Flags */}
+                                        {analysis.redFlags.length > 0 && (
+                                            <div style={{background:'rgba(239,68,68,0.08)', padding:'14px', borderRadius:'10px', marginTop:'14px', border:'1px solid rgba(239,68,68,0.2)'}}>
+                                                <h4 style={{color:'var(--danger)', marginBottom:'8px', fontSize:'0.9rem'}}>🚩 RED FLAGS ({analysis.redFlags.length})</h4>
+                                                {analysis.redFlags.map((flag,i) => <div key={i} style={{fontSize:'0.86rem', marginBottom:'5px', lineHeight:1.4}}>{flag}</div>)}
+                                            </div>
+                                        )}
+
+                                        {/* Green Flags */}
+                                        {analysis.greenFlags?.length > 0 && (
+                                            <div style={{background:'rgba(16,185,129,0.08)', padding:'14px', borderRadius:'10px', marginTop:'10px', border:'1px solid rgba(16,185,129,0.2)'}}>
+                                                <h4 style={{color:'var(--success)', marginBottom:'8px', fontSize:'0.9rem'}}>✅ GREEN FLAGS ({analysis.greenFlags.length})</h4>
+                                                {analysis.greenFlags.map((flag,i) => <div key={i} style={{fontSize:'0.86rem', marginBottom:'5px', lineHeight:1.4}}>{flag}</div>)}
+                                            </div>
+                                        )}
+
+                                        {/* ── FERRAMENTAS EXTERNAS ── */}
+                                        <div style={{marginTop:'18px', padding:'14px', background:'var(--bg-primary)', borderRadius:'10px', border:'1px solid var(--border)'}}>
+                                            <p style={{color:'var(--text-secondary)', fontSize:'0.78rem', fontWeight:'bold', letterSpacing:'1px', marginBottom:'10px', textTransform:'uppercase'}}>
+                                                🔬 Verificar manualmente
+                                            </p>
+                                            <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
+                                                <a href={`https://app.bubblemaps.io/sol/token/${analysis.address}`} target="_blank" rel="noreferrer" style={{
+                                                    display:'flex', alignItems:'center', gap:'5px', padding:'8px 14px', borderRadius:'8px', textDecoration:'none',
+                                                    background:'rgba(139,92,246,0.12)', border:'1px solid rgba(139,92,246,0.4)', color:'#a78bfa', fontSize:'0.82rem', fontWeight:'bold'
+                                                }}>🫧 Bubblemaps</a>
+                                                <a href={`https://solscan.io/token/${analysis.address}#holders`} target="_blank" rel="noreferrer" style={{
+                                                    display:'flex', alignItems:'center', gap:'5px', padding:'8px 14px', borderRadius:'8px', textDecoration:'none',
+                                                    background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.35)', color:'var(--accent)', fontSize:'0.82rem', fontWeight:'bold'
+                                                }}>🔍 Holders (Solscan)</a>
+                                                <a href={`https://dexscreener.com/solana/${analysis.address}`} target="_blank" rel="noreferrer" style={{
+                                                    display:'flex', alignItems:'center', gap:'5px', padding:'8px 14px', borderRadius:'8px', textDecoration:'none',
+                                                    background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.3)', color:'var(--success)', fontSize:'0.82rem', fontWeight:'bold'
+                                                }}>📈 DexScreener</a>
+                                                <a href={`https://birdeye.so/token/${analysis.address}?chain=solana`} target="_blank" rel="noreferrer" style={{
+                                                    display:'flex', alignItems:'center', gap:'5px', padding:'8px 14px', borderRadius:'8px', textDecoration:'none',
+                                                    background:'rgba(245,158,11,0.1)', border:'1px solid rgba(245,158,11,0.3)', color:'var(--warning)', fontSize:'0.82rem', fontWeight:'bold'
+                                                }}>🦅 Birdeye</a>
+                                            </div>
+                                        </div>
+
+                                        {/* Social links */}
+                                        {(analysis.links?.telegram || analysis.links?.twitter || analysis.links?.website) && (
+                                            <div style={{display:'flex', gap:'8px', marginTop:'12px', flexWrap:'wrap'}}>
+                                                {analysis.links.telegram && (
+                                                    <a href={analysis.links.telegram} target="_blank" rel="noreferrer" style={{
+                                                        display:'flex', alignItems:'center', gap:'5px', padding:'7px 12px', borderRadius:'8px',
+                                                        background:'rgba(0,136,204,0.12)', border:'1px solid rgba(0,136,204,0.4)',
+                                                        color:'#29b6f6', fontSize:'0.82rem', fontWeight:'bold', textDecoration:'none'
+                                                    }}>📣 Telegram</a>
+                                                )}
+                                                {analysis.links.twitter && (
+                                                    <a href={analysis.links.twitter} target="_blank" rel="noreferrer" style={{
+                                                        display:'flex', alignItems:'center', gap:'5px', padding:'7px 12px', borderRadius:'8px',
+                                                        background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.2)',
+                                                        color:'var(--text-primary)', fontSize:'0.82rem', fontWeight:'bold', textDecoration:'none'
+                                                    }}>🐦 Twitter/X</a>
+                                                )}
+                                                {analysis.links.website && (
+                                                    <a href={analysis.links.website} target="_blank" rel="noreferrer" style={{
+                                                        display:'flex', alignItems:'center', gap:'5px', padding:'7px 12px', borderRadius:'8px',
+                                                        background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.3)',
+                                                        color:'var(--success)', fontSize:'0.82rem', fontWeight:'bold', textDecoration:'none'
+                                                    }}>🌐 Website</a>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <button onClick={registerTrade} className="success" style={{marginTop:'20px', fontSize:'1rem', padding:'14px 28px', letterSpacing:'1px', width:'100%'}}>
+                                            🚀 APE
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === 'portfolio' && (
+                            <div className="fade-in">
+                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '10px'}}>
+                                    <h2>📊 Portfolio</h2>
+                                    <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+                                        <div style={{padding: '8px 16px', background: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.9rem'}}>
+                                            💰 Saldo: <strong>{(user.balance || 0).toFixed(2)} SOL</strong>
+                                        </div>
+                                        <button 
+                                            onClick={() => { if(confirm('Limpar TODOS os trades? (não pode desfazer)')) { setUser({...user, trades: [], balance: 5.0}); showToast('Dados resetados!', 'success'); }}} 
+                                            className="danger" 
+                                            style={{fontSize: '0.8rem', padding: '8px 14px'}}
+                                        >🗑️ Reset Trades</button>
+                                    </div>
+                                </div>
+                                
+                                {/* ACTIVE TRADES */}
+                                <div className="card">
+                                    <h3>Active Positions ({user.trades?.filter(t => t.status === 'active').length || 0})</h3>
+                                    {user.trades?.filter(t => t.status === 'active').length === 0 ? (
+                                        <p style={{color: 'var(--text-secondary)', marginTop: '15px'}}>
+                                            No active trades. Go to Analysis tab to buy tokens!
+                                        </p>
+                                    ) : (
+                                        user.trades.filter(t => t.status === 'active').map(trade => {
+                                            const currentPrice = trade.currentPrice || trade.avgEntryPrice;
+                                            const priceChange = ((currentPrice - trade.avgEntryPrice) / trade.avgEntryPrice) * 100;
+                                            const partialPnl = (trade.partialExits || []).reduce((sum, exit) => sum + exit.pnl, 0);
+                                            const unrealizedPnl = trade.totalInvested * (priceChange / 100);
+                                            const totalPnl = partialPnl + unrealizedPnl;
+                                            
+                                            return (
+                                                <div key={trade.id} className="slide-in" style={{
+                                                    background: 'var(--bg-primary)',
+                                                    padding: '20px',
+                                                    borderRadius: '10px',
+                                                    marginTop: '15px',
+                                                    border: `1px solid ${totalPnl >= 0 ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                                                    cursor: 'pointer',
+                                                    transition: 'border-color 0.2s'
+                                                }}>
+                                                    {/* Clickable header row */}
+                                                    <div
+                                                        onClick={() => setPortfolioModal(trade)}
+                                                        style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'15px', flexWrap:'wrap', gap:'8px'}}
+                                                    >
+                                                        <div>
+                                                            <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                                                                <h3 style={{cursor:'pointer'}}>{trade.tokenSymbol}</h3>
+                                                                <span style={{
+                                                                    fontSize:'0.7rem', padding:'2px 8px', borderRadius:'10px',
+                                                                    background:'var(--bg-secondary)', color:'var(--text-secondary)'
+                                                                }}>ver detalhes</span>
+                                                                {trade.buyReason && (
+                                                                    <span style={{
+                                                                        fontSize:'0.7rem', padding:'2px 8px', borderRadius:'10px',
+                                                                        background:'rgba(59,130,246,0.15)', color:'var(--accent)'
+                                                                    }}>{trade.buyReason}</span>
+                                                                )}
+                                                            </div>
+                                                            <small style={{color:'var(--text-secondary)'}}>
+                                                                {trade.tokenName} • {trade.entries.length} {trade.entries.length === 1 ? 'entrada' : 'entradas'}
+                                                            </small>
+                                                        </div>
+                                                        <div style={{textAlign:'right'}}>
+                                                            <div style={{fontSize:'1.2rem', fontWeight:'bold', color: totalPnl >= 0 ? 'var(--success)' : 'var(--danger)'}}>
+                                                                {totalPnl >= 0 ? '+' : ''}{totalPnl.toFixed(3)} SOL
+                                                            </div>
+                                                            <small style={{color: priceChange >= 0 ? 'var(--success)' : 'var(--danger)'}}>
+                                                                {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(1)}%
+                                                            </small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(120px, 1fr))', gap:'10px', marginBottom:'15px'}}>
+                                                        <div>
+                                                            <small style={{color:'var(--text-secondary)'}}>Investido</small>
+                                                            <div style={{fontWeight:'bold'}}>{trade.totalInvested.toFixed(3)} SOL</div>
+                                                        </div>
+                                                        <div>
+                                                            <small style={{color:'var(--text-secondary)'}}>Preço Médio</small>
+                                                            <div style={{fontWeight:'bold'}}>${trade.avgEntryPrice.toFixed(8)}</div>
+                                                        </div>
+                                                        <div>
+                                                            <small style={{color:'var(--text-secondary)'}}>Preço Atual</small>
+                                                            <div style={{fontWeight:'bold'}}>${currentPrice.toFixed(8)}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {(trade.partialExits || []).length > 0 && (
+                                                        <div style={{marginBottom:'15px', padding:'10px', background:'var(--bg-secondary)', borderRadius:'6px'}}>
+                                                            <small style={{color:'var(--text-secondary)'}}>Saídas Parciais: {trade.partialExits.length}</small>
+                                                            <div style={{fontWeight:'bold', color:'var(--success)'}}>Realizado: +{partialPnl.toFixed(3)} SOL</div>
+                                                        </div>
+                                                    )}
+
+                                                    <div style={{display:'flex', gap:'8px', flexWrap:'wrap', marginTop:'15px', alignItems:'center'}}>
+                                                        <button onClick={(e) => { e.stopPropagation(); handleDCA(trade); }} className="success" style={{fontSize:'0.85rem'}}>
+                                                            📉 DCA Entrada
+                                                        </button>
+                                                        <button onClick={(e) => { e.stopPropagation(); handlePartialSell(trade); }} className="warning" style={{fontSize:'0.85rem'}}>
+                                                            📊 Vender % Parcial
+                                                        </button>
+                                                        <button onClick={(e) => { e.stopPropagation(); handleCloseTrade(trade.id); }} className="danger" style={{fontSize:'0.85rem'}}>
+                                                            💰 Fechar Posição
+                                                        </button>
+                                                        <button onClick={(e) => { e.stopPropagation(); updateTradePrice(trade); }} style={{fontSize:'0.85rem'}}>
+                                                            🔄 Atualizar
+                                                        </button>
+                                                        {/* Mini DexScreener button */}
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); window.open(`https://dexscreener.com/solana/${trade.tokenAddress}`, '_blank'); }}
+                                                            style={{fontSize:'0.75rem', padding:'6px 10px', margin:0, background:'rgba(16,185,129,0.15)', border:'1px solid var(--success)', borderRadius:'6px', color:'var(--success)', cursor:'pointer'}}
+                                                        >
+                                                            📈 DEX
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
+
+                                {/* CLOSED TRADES */}
+                                <div className="card">
+                                    <h3>Trade History ({user.trades?.filter(t => t.status === 'closed').length || 0})</h3>
+                                    {user.trades?.filter(t => t.status === 'closed').length === 0 ? (
+                                        <p style={{color: 'var(--text-secondary)', marginTop: '15px'}}>No closed trades yet</p>
+                                    ) : (
+                                        user.trades.filter(t => t.status === 'closed').slice().reverse().map(trade => {
+                                            const totalPnl = trade.totalPnl || 0;
+                                            const pnlPercentage = ((totalPnl / trade.totalInvested) * 100);
+                                            
+                                            return (
+                                                <div key={trade.id} style={{
+                                                    background: 'var(--bg-primary)',
+                                                    padding: '12px',
+                                                    borderRadius: '8px',
+                                                    margin: '8px 0',
+                                                    borderLeft: `3px solid ${totalPnl >= 0 ? 'var(--success)' : 'var(--danger)'}`
+                                                }}>
+                                                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'}}>
+                                                        <div>
+                                                            <strong>{trade.tokenSymbol}</strong>
+                                                            <br/>
+                                                            <small style={{color: 'var(--text-secondary)'}}>
+                                                                {trade.entries?.length || 1} entries • Avg: ${trade.avgEntryPrice.toFixed(8)}
+                                                            </small>
+                                                        </div>
+                                                        <div style={{textAlign: 'right'}}>
+                                                            <div style={{
+                                                                fontWeight: 'bold',
+                                                                fontSize: '1.1rem',
+                                                                color: totalPnl >= 0 ? 'var(--success)' : 'var(--danger)'
+                                                            }}>
+                                                                {totalPnl >= 0 ? '+' : ''}{totalPnl.toFixed(3)} SOL
+                                                            </div>
+                                                            <small style={{color: 'var(--text-secondary)'}}>
+                                                                ({pnlPercentage >= 0 ? '+' : ''}{pnlPercentage.toFixed(1)}%)
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {(trade.partialExits || []).length > 0 && (
+                                                        <div style={{marginTop: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)'}}>
+                                                            {trade.partialExits.length} partial exit(s)
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'narratives' && (
+                            <div className="fade-in">
+                                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
+                                    <h2>🌊 Narrativas</h2>
+                                    <span style={{color:'var(--text-secondary)', fontSize:'0.76rem', padding:'4px 10px', borderRadius:'20px', background:'var(--bg-card)', border:'1px solid var(--border)'}}>
+                                        🔄 Reset toda segunda-feira
+                                    </span>
+                                </div>
+
+                                <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(130px, 1fr))', gap:'12px'}}>
+                                    {[...narratives].sort((a,b)=>b.votes-a.votes).map((n, i) => {
+                                        const voted = !!userVotes[n.id];
+                                        const medals = ['🥇','🥈','🥉'];
+                                        const isTop = i < 3;
+                                        const borderCol = i===0?'#fbbf24': i===1?'#94a3b8': i===2?'#cd7f32': voted?'var(--accent)':'var(--border)';
+                                        return (
+                                            <div key={n.id} onClick={()=>handleVote(n.id)} style={{
+                                                position:'relative',
+                                                borderRadius:'14px',
+                                                aspectRatio:'1',
+                                                cursor:'pointer',
+                                                background:'var(--bg-card)',
+                                                border:`2px solid ${borderCol}`,
+                                                display:'flex', flexDirection:'column',
+                                                alignItems:'center', justifyContent:'center',
+                                                gap:'8px', padding:'12px',
+                                                transition:'transform 0.15s, box-shadow 0.15s',
+                                                boxShadow: voted ? '0 0 16px rgba(59,130,246,0.35)' : isTop ? `0 0 10px ${i===0?'rgba(251,191,36,0.25)':'rgba(148,163,184,0.15)'}` : 'none',
+                                                userSelect:'none',
+                                            }}
+                                            onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'}
+                                            onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}
+                                            >
+                                                {/* Medal */}
+                                                {isTop && (
+                                                    <div style={{position:'absolute', top:'8px', left:'8px', fontSize:'1rem', lineHeight:1}}>
+                                                        {medals[i]}
+                                                    </div>
+                                                )}
+
+                                                {/* Vote count */}
+                                                <div style={{
+                                                    position:'absolute', top:'8px', right:'8px',
+                                                    background: voted?'var(--accent)':'var(--bg-primary)',
+                                                    color: voted?'white':'var(--text-secondary)',
+                                                    borderRadius:'20px', padding:'2px 7px',
+                                                    fontSize:'0.72rem', fontWeight:'bold'
+                                                }}>
+                                                    {n.votes}
+                                                </div>
+
+                                                {/* Emoji */}
+                                                <div style={{fontSize:'2.8rem', lineHeight:1, filter: voted?'none':'grayscale(20%)'}}>
+                                                    {voted ? '🔥' : n.emoji}
+                                                </div>
+
+                                                {/* Title */}
+                                                <div style={{
+                                                    fontSize:'0.82rem', fontWeight:'bold',
+                                                    textAlign:'center', color:'var(--text-primary)',
+                                                    lineHeight:1.2
+                                                }}>{n.title}</div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <p style={{color:'var(--text-secondary)', fontSize:'0.76rem', textAlign:'center', marginTop:'16px'}}>
+                                    Toque para votar · Toque de novo para remover · 1 voto por narrativa
+                                </p>
+                            </div>
+                        )}
+
+                        {activeTab === 'badges' && (
+                            <div className="fade-in">
+                                <h2>🏆 Badges</h2>
+                                <div className="card">
+                                    <h3 style={{marginBottom: '20px'}}>
+                                        Unlocked: {user.badges?.length || 0} / {Object.keys(ALL_BADGES).length}
+                                    </h3>
+                                    <div className="badge-grid">
+                                        {Object.entries(ALL_BADGES).map(([id, badge]) => {
+                                            const isUnlocked = user.badges?.includes(id);
+                                            return (
+                                                <div 
+                                                    key={id} 
+                                                    className={`badge-item ${isUnlocked ? 'unlocked' : 'locked'}`}
+                                                    title={badge.desc}
+                                                >
+                                                    <div className="badge-icon">{badge.icon}</div>
+                                                    <div className="badge-name">{badge.name}</div>
+                                                    <div className="badge-desc">{badge.desc}</div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'ranking' && (
+                            <div className="fade-in">
+                                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'10px'}}>
+                                    <h2>🥇 Ranking Global</h2>
+                                    <button onClick={fetchRanking} style={{padding:'8px 16px', fontSize:'0.82rem', margin:0}}
+                                        disabled={rankingLoading}>
+                                        {rankingLoading ? '⏳' : '🔄 Atualizar'}
+                                    </button>
+                                </div>
+
+                                {/* My position card */}
+                                {(() => {
+                                    const sorted = [...ranking].sort((a,b) => b.xp - a.xp);
+                                    const myPos = sorted.findIndex(r => r.id === user.id);
+                                    if (myPos < 0) return null;
+                                    const me = sorted[myPos];
+                                    return (
+                                        <div style={{
+                                            padding:'14px 18px', borderRadius:'12px', marginBottom:'16px',
+                                            background:'linear-gradient(135deg, rgba(59,130,246,0.12), rgba(139,92,246,0.12))',
+                                            border:'1px solid rgba(59,130,246,0.35)'
+                                        }}>
+                                            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                                                <div>
+                                                    <span style={{color:'var(--text-secondary)', fontSize:'0.78rem'}}>Sua posição</span>
+                                                    <div style={{fontSize:'1.4rem', fontWeight:'bold', color:'var(--accent)'}}>
+                                                        #{myPos + 1} <span style={{fontSize:'0.95rem', color:'var(--text-primary)'}}>{me.username}</span>
+                                                    </div>
+                                                </div>
+                                                <div style={{textAlign:'right'}}>
+                                                    <div style={{fontSize:'1.1rem', fontWeight:'bold', color:'var(--accent)'}}>{me.xp.toLocaleString()} XP</div>
+                                                    <div style={{fontSize:'0.8rem', color:'var(--text-secondary)'}}>de {sorted.length} traders</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                <RankingTable ranking={ranking} rankingLoading={rankingLoading} userId={user.id} user={user} />
+                            </div>
+                        )}
+                        {activeTab === 'community' && (
+                            <CommunityTab user={user} onXPChange={addXP} />
+                        )}
+                    </div>
+                    
+                    {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+                    {xpPopup && <XPGainPopup xp={xpPopup.xp} reason={xpPopup.reason} onClose={() => setXPPopup(null)} />}
+                    {buyModal?.type === 'ape' && <ApeModal analysis={analysis} balance={user?.balance||0} onConfirm={confirmApe} onClose={()=>setBuyModal(null)} />}
+                    {buyModal?.type === 'dca' && <DCAModal trade={buyModal.trade} balance={user?.balance||0} onConfirm={confirmDCA} onClose={()=>setBuyModal(null)} />}
+                    {buyModal?.type === 'partial' && <PartialModal trade={buyModal.trade} onConfirm={confirmPartialSell} onClose={()=>setBuyModal(null)} />}
+                    {closeModal && <CloseModal trade={closeModal} onConfirm={confirmCloseTrade} onClose={()=>setCloseModal(null)} />}
+                    {portfolioModal && <TradeInfoModal trade={portfolioModal} onClose={()=>setPortfolioModal(null)} />}
+                    </div>}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<HelmApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
