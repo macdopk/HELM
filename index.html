@@ -408,8 +408,34 @@
 // ══════════════════════════════════════════════════════════════════
 const SUPABASE_URL  = 'YOUR_SUPABASE_URL';   // e.g. https://xxxx.supabase.co
 const SUPABASE_KEY  = 'YOUR_SUPABASE_ANON_KEY'; // public anon key
+const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // e.g. https://xxxx.supabase.co
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY'; // public anon key
 
 const _sbReady = SUPABASE_URL !== 'YOUR_SUPABASE_URL';
+const hasSupabaseConfig = () => {
+  const hasUrl = SUPABASE_URL && SUPABASE_URL !== 'YOUR_SUPABASE_URL';
+  const hasKey = SUPABASE_KEY && SUPABASE_KEY !== 'YOUR_SUPABASE_ANON_KEY';
+  return hasUrl && hasKey;
+};
+
+const supabaseHeaders = (extra = {}) => ({
+  apikey: SUPABASE_KEY,
+  Authorization: 'Bearer ' + SUPABASE_KEY,
+  ...extra
+});
+
+const supabaseRequest = async (path, options = {}) => {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: supabaseHeaders(options.headers || {})
+  });
+
+  if (!response.ok) {
+    throw new Error(`Supabase request failed (${response.status})`);
+  }
+
+  return response;
+};
 
 const helmStorage = {
   // SET key/value — shared=true goes to Supabase, false goes to localStorage
@@ -417,19 +443,25 @@ const helmStorage = {
     const v = typeof value === 'string' ? value : JSON.stringify(value);
     if (shared && _sbReady) {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/helm_storage`, {
+
+    if (shared && hasSupabaseConfig()) {
+      await supabaseRequest('helm_storage', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'apikey': SUPABASE_KEY,
           'Authorization': 'Bearer ' + SUPABASE_KEY,
           'Prefer': 'resolution=merge-duplicates',
+          Prefer: 'resolution=merge-duplicates'
         },
         body: JSON.stringify({ key, value: v, updated_at: new Date().toISOString() }),
+        body: JSON.stringify({ key, value: v, updated_at: new Date().toISOString() })
       });
       if (!res.ok) throw new Error('Supabase set failed: ' + res.status);
     } else {
       localStorage.setItem(key, v);
     }
+
     return { key, value: v };
   },
 
@@ -439,16 +471,33 @@ const helmStorage = {
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/helm_storage?key=eq.${encodeURIComponent(key)}&select=key,value`,
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+    if (shared && hasSupabaseConfig()) {
+      const response = await supabaseRequest(
+        `helm_storage?key=eq.${encodeURIComponent(key)}&select=key,value`
       );
       if (!res.ok) throw new Error('Supabase get failed: ' + res.status);
       const rows = await res.json();
       if (!rows.length) throw new Error('Key not found: ' + key);
+      const rows = await response.json();
+
+      if (!rows.length) {
+        throw new Error('Key not found: ' + key);
+      }
+
       return { key, value: rows[0].value };
     } else {
       const v = localStorage.getItem(key);
       if (v === null) throw new Error('Key not found: ' + key);
       return { key, value: v };
     }
+
+    const v = localStorage.getItem(key);
+
+    if (v === null) {
+      throw new Error('Key not found: ' + key);
+    }
+
+    return { key, value: v };
   },
 
   // LIST keys by prefix — shared=true reads from Supabase
@@ -457,13 +506,19 @@ const helmStorage = {
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/helm_storage?key=like.${encodeURIComponent(prefix + '%')}&select=key&order=updated_at.desc&limit=200`,
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+    if (shared && hasSupabaseConfig()) {
+      const response = await supabaseRequest(
+        `helm_storage?key=like.${encodeURIComponent(prefix + '%')}&select=key&order=updated_at.desc&limit=200`
       );
       if (!res.ok) throw new Error('Supabase list failed: ' + res.status);
       const rows = await res.json();
+      const rows = await response.json();
       return { keys: rows.map(r => r.key), prefix };
     } else {
       return { keys: Object.keys(localStorage).filter(k => k.startsWith(prefix)), prefix };
     }
+
+    return { keys: Object.keys(localStorage).filter(k => k.startsWith(prefix)), prefix };
   },
 
   // DELETE key
@@ -476,11 +531,17 @@ const helmStorage = {
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
         }
       );
+    if (shared && hasSupabaseConfig()) {
+      await supabaseRequest(`helm_storage?key=eq.${encodeURIComponent(key)}`, {
+        method: 'DELETE'
+      });
     } else {
       localStorage.removeItem(key);
     }
+
     return { key, deleted: true };
   },
+  }
 };
 
 // Expose as window.storage so the rest of the app uses it transparently
