@@ -9,8 +9,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="HELM">
     <meta name="theme-color" content="#1a1f2e">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚓</text></svg>">
-    <title>⚓ HELM - Navigate memecoin chaos</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSIyMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2I4MmY2IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI4IiBmaWxsPSIjM2I4MmY2Ii8+CiAgPGxpbmUgeDE9IjUwIiB5MT0iMTAiIHgyPSI1MCIgeTI9IjI4IiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjUwIiB5MT0iNzIiIHgyPSI1MCIgeTI9IjkwIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjEwIiB5MT0iNTAiIHgyPSIyOCIgeTI9IjUwIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjcyIiB5MT0iNTAiIHgyPSI5MCIgeTI9IjUwIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjIxLjciIHkxPSIyMS43IiB4Mj0iMzQuMyIgeTI9IjM0LjMiIHN0cm9rZT0iIzNiODJmNiIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8bGluZSB4MT0iNjUuNyIgeTE9IjY1LjciIHgyPSI3OC4zIiB5Mj0iNzguMyIgc3Ryb2tlPSIjM2I4MmY2IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxsaW5lIHgxPSI3OC4zIiB5MT0iMjEuNyIgeDI9IjY1LjciIHkyPSIzNC4zIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjM0LjMiIHkxPSI2NS43IiB4Mj0iMjEuNyIgeTI9Ijc4LjMiIHN0cm9rZT0iIzNiODJmNiIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg==">
+    <title>☸ HELM - Navigate memecoin chaos</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -612,7 +612,7 @@
 
     /* Ocultar TRENDING e Reset */
     .header > div[style*="flexWrap: 'wrap'"] { display: none !important; }
-    button.danger { display: none !important; }
+    .reset-btn { display: none !important; }
 
     /* ── UTILITY CLASSES (replace repeated inline styles) ── */
     .u-flex { display: flex; }
@@ -877,13 +877,17 @@ function AuthScreen() {
           marginBottom: '30px'
         }
       },
-        React.createElement('h1', {
+        React.createElement('div', {
           style: {
-            fontSize: '48px',
             margin: '0 0 10px 0',
-            color: 'white'
+            display: 'flex',
+            justifyContent: 'center'
           }
-        }, '⚓'),
+        }, React.createElement('img', {
+          src: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSIyMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2I4MmY2IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI4IiBmaWxsPSIjM2I4MmY2Ii8+CiAgPGxpbmUgeDE9IjUwIiB5MT0iMTAiIHgyPSI1MCIgeTI9IjI4IiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjUwIiB5MT0iNzIiIHgyPSI1MCIgeTI9IjkwIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjEwIiB5MT0iNTAiIHgyPSIyOCIgeTI9IjUwIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjcyIiB5MT0iNTAiIHgyPSI5MCIgeTI9IjUwIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjIxLjciIHkxPSIyMS43IiB4Mj0iMzQuMyIgeTI9IjM0LjMiIHN0cm9rZT0iIzNiODJmNiIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8bGluZSB4MT0iNjUuNyIgeTE9IjY1LjciIHgyPSI3OC4zIiB5Mj0iNzguMyIgc3Ryb2tlPSIjM2I4MmY2IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxsaW5lIHgxPSI3OC4zIiB5MT0iMjEuNyIgeDI9IjY1LjciIHkyPSIzNC4zIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjM0LjMiIHkxPSI2NS43IiB4Mj0iMjEuNyIgeTI9Ijc4LjMiIHN0cm9rZT0iIzNiODJmNiIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg==",
+          alt: "HELM",
+          style: { width: '56px', height: '56px' }
+        })),
         React.createElement('h2', {
           style: {
             fontSize: '32px',
@@ -3482,7 +3486,7 @@ function XPTableModal({
     xp: '0'
   }, {
     level: 2,
-    name: '⚓ Sailor',
+    name: '☸ Sailor',
     xp: '500'
   }, {
     level: 3,
@@ -4034,7 +4038,7 @@ function TutorialOverlay({
 }) {
   const STEPS = [{
     target: null,
-    title: '⚓ Welcome to HELM!',
+    title: '☸ Welcome to HELM!',
     body: `HELM is your paper trading simulator for Solana memecoins — practice without risking real SOL. You start with 5 SOL to trade. Let's take a quick tour!`,
     pos: 'center'
   }, {
@@ -5754,14 +5758,14 @@ function HelmApp() {
             zIndex: 1000
           }
         }, "🚪 Logout"),
-        React.createElement("div", {className:"logo", className:'u-flex u-items-center u-gap8'},
-    React.createElement("img", {src:"data:image/png;base64,BASE64_IMAGE_REMOVED", alt:"HELM", style:{width:'32px', height:'32px'}}),
+        React.createElement("div", {className:'logo u-flex u-items-center u-gap8'},
+    React.createElement("img", {src:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSIyMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2I4MmY2IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI4IiBmaWxsPSIjM2I4MmY2Ii8+CiAgPGxpbmUgeDE9IjUwIiB5MT0iMTAiIHgyPSI1MCIgeTI9IjI4IiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjUwIiB5MT0iNzIiIHgyPSI1MCIgeTI9IjkwIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjEwIiB5MT0iNTAiIHgyPSIyOCIgeTI9IjUwIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjcyIiB5MT0iNTAiIHgyPSI5MCIgeTI9IjUwIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjIxLjciIHkxPSIyMS43IiB4Mj0iMzQuMyIgeTI9IjM0LjMiIHN0cm9rZT0iIzNiODJmNiIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8bGluZSB4MT0iNjUuNyIgeTE9IjY1LjciIHgyPSI3OC4zIiB5Mj0iNzguMyIgc3Ryb2tlPSIjM2I4MmY2IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxsaW5lIHgxPSI3OC4zIiB5MT0iMjEuNyIgeDI9IjY1LjciIHkyPSIzNC4zIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjM0LjMiIHkxPSI2NS43IiB4Mj0iMjEuNyIgeTI9Ijc4LjMiIHN0cm9rZT0iIzNiODJmNiIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg==", alt:"HELM", style:{width:'32px', height:'32px'}}),
     "HELM"
   )
       ),
       React.createElement("div", {className:"container"},
         React.createElement("div", {className:"card", style:{textAlign:'center', maxWidth:'380px', margin:'60px auto'}},
-          React.createElement("img", {src:"data:image/png;base64,BASE64_IMAGE_REMOVED", alt:"HELM Logo", style:{width:'120px', height:'120px', marginBottom:'16px'}} ),
+          React.createElement("img", {src:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSIyMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2I4MmY2IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI4IiBmaWxsPSIjM2I4MmY2Ii8+CiAgPGxpbmUgeDE9IjUwIiB5MT0iMTAiIHgyPSI1MCIgeTI9IjI4IiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjUwIiB5MT0iNzIiIHgyPSI1MCIgeTI9IjkwIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjEwIiB5MT0iNTAiIHgyPSIyOCIgeTI9IjUwIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjcyIiB5MT0iNTAiIHgyPSI5MCIgeTI9IjUwIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjIxLjciIHkxPSIyMS43IiB4Mj0iMzQuMyIgeTI9IjM0LjMiIHN0cm9rZT0iIzNiODJmNiIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8bGluZSB4MT0iNjUuNyIgeTE9IjY1LjciIHgyPSI3OC4zIiB5Mj0iNzguMyIgc3Ryb2tlPSIjM2I4MmY2IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxsaW5lIHgxPSI3OC4zIiB5MT0iMjEuNyIgeDI9IjY1LjciIHkyPSIzNC4zIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjM0LjMiIHkxPSI2NS43IiB4Mj0iMjEuNyIgeTI9Ijc4LjMiIHN0cm9rZT0iIzNiODJmNiIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg==", alt:"HELM Logo", style:{width:'120px', height:'120px', marginBottom:'16px'}} ),
           React.createElement("h2", {style:{marginBottom:'4px'}}, "Take the Helm"),
           React.createElement("p", {style:{color:'var(--text-secondary)', marginBottom:'6px', fontSize:'0.9rem'}},
             "Paper trade Solana memecoins. No real SOL needed."
@@ -5819,8 +5823,8 @@ function HelmApp() {
       minWidth: 0,
     }
   }, /*#__PURE__*/React.createElement("div", {style:{display:'flex',flexDirection:'column',gap:'1px',minWidth:0,flexShrink:1}},
-    React.createElement("div", {className:"logo", className:'u-flex u-items-center u-gap8'},
-    React.createElement("img", {src:"data:image/png;base64,BASE64_IMAGE_REMOVED", alt:"HELM", style:{width:'28px', height:'28px'}}),
+    React.createElement("div", {className:'logo u-flex u-items-center u-gap8'},
+    React.createElement("img", {src:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSIyMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2I4MmY2IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI4IiBmaWxsPSIjM2I4MmY2Ii8+CiAgPGxpbmUgeDE9IjUwIiB5MT0iMTAiIHgyPSI1MCIgeTI9IjI4IiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjUwIiB5MT0iNzIiIHgyPSI1MCIgeTI9IjkwIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjEwIiB5MT0iNTAiIHgyPSIyOCIgeTI9IjUwIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjcyIiB5MT0iNTAiIHgyPSI5MCIgeTI9IjUwIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjIxLjciIHkxPSIyMS43IiB4Mj0iMzQuMyIgeTI9IjM0LjMiIHN0cm9rZT0iIzNiODJmNiIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8bGluZSB4MT0iNjUuNyIgeTE9IjY1LjciIHgyPSI3OC4zIiB5Mj0iNzguMyIgc3Ryb2tlPSIjM2I4MmY2IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxsaW5lIHgxPSI3OC4zIiB5MT0iMjEuNyIgeDI9IjY1LjciIHkyPSIzNC4zIiBzdHJva2U9IiMzYjgyZjYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjM0LjMiIHkxPSI2NS43IiB4Mj0iMjEuNyIgeTI9Ijc4LjMiIHN0cm9rZT0iIzNiODJmNiIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg==", alt:"HELM", style:{width:'28px', height:'28px'}}),
     "HELM"
   ),
     React.createElement("div", {style:{fontSize:'0.7rem',color:'var(--text-secondary)',fontWeight:'400',letterSpacing:'0.01em',opacity:0.7,marginTop:'-2px'}},
@@ -7234,7 +7238,7 @@ function HelmApp() {
         showToast('Trades reset!', 'success');
       }
     },
-    className: "danger",
+    className: "danger reset-btn",
     style: {
       fontSize: '0.8rem',
       padding: '8px 14px'
