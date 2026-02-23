@@ -640,6 +640,139 @@
     .u-dim { opacity: 0.5; flex-shrink: 0; }
     .u-upper { text-transform: uppercase; letter-spacing: 0.08em; }
     .u-card-inner { background: var(--bg-primary); border-radius: 10px; padding: 12px; }
+
+    /* ── NEW PORTFOLIO CARD DESIGN ──────────────── */
+    .pos-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      margin-top: 12px;
+    }
+    .pos-card:hover { border-color: rgba(148,163,184,0.25); }
+    .pos-card.pos-loss { border-left: 3px solid var(--danger); }
+    .pos-card.pos-win { border-left: 3px solid var(--success); }
+
+    .pos-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      cursor: pointer;
+      gap: 10px;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .pos-left { display: flex; align-items: center; gap: 11px; min-width: 0; flex: 1; }
+    .token-avatar {
+      width: 38px; height: 38px; border-radius: 9px;
+      background: var(--bg-primary); display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.72rem; color: var(--accent); flex-shrink: 0;
+      letter-spacing: -0.02em; border: 1px solid rgba(59,130,246,0.15);
+    }
+    .token-info { min-width: 0; }
+    .token-name-row { font-weight: 700; font-size: 0.92rem; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+    .token-tag {
+      font-size: 0.6rem; font-weight: 600; padding: 2px 7px; border-radius: 5px;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      background: rgba(59,130,246,0.12); color: var(--accent);
+    }
+    .token-meta-line { font-size: 0.73rem; color: var(--text-secondary); margin-top: 2px; }
+    .pos-right { text-align: right; flex-shrink: 0; }
+    .pnl-val { font-weight: 700; font-size: 1rem; letter-spacing: -0.02em; }
+    .pnl-val.up { color: var(--success); }
+    .pnl-val.down { color: var(--danger); }
+    .pnl-pct { font-size: 0.7rem; margin-top: 1px; opacity: 0.75; }
+    .pnl-pct.up { color: var(--success); }
+    .pnl-pct.down { color: var(--danger); }
+    .expand-arrow {
+      font-size: 0.6rem; color: var(--text-secondary); transition: transform 0.25s;
+      display: inline-block; margin-left: 4px;
+    }
+    .expand-arrow.open { transform: rotate(180deg); }
+
+    .pos-quick {
+      display: flex; gap: 6px; padding: 0 16px 12px;
+    }
+    .pos-qbtn {
+      padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-secondary); font-family: inherit;
+      font-size: 0.76rem; font-weight: 500; cursor: pointer; transition: all 0.2s;
+    }
+    .pos-qbtn:hover { background: var(--bg-hover); color: var(--text-primary); transform: translateY(-1px); }
+    .pos-qbtn.qsell {
+      background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); color: var(--danger); font-weight: 600;
+    }
+    .pos-qbtn.qsell:hover { background: rgba(239,68,68,0.16); }
+    .pos-qbtn.qupdate {
+      background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.2); color: var(--accent);
+    }
+
+    .pos-details {
+      max-height: 0; overflow: hidden; opacity: 0;
+      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+    }
+    .pos-details.open { max-height: 400px; opacity: 1; }
+    .pos-details-inner { padding: 0 16px 14px; border-top: 1px solid var(--border); }
+
+    .pos-stats-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+      background: var(--border); border-radius: 9px; overflow: hidden; margin: 12px 0;
+    }
+    .pos-stat {
+      background: var(--bg-primary); padding: 10px 8px; text-align: center;
+    }
+    .pos-stat .ps-label {
+      font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text-secondary); margin-bottom: 3px;
+    }
+    .pos-stat .ps-value { font-size: 0.8rem; font-weight: 600; color: var(--text-primary); }
+
+    .pos-actions {
+      display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .pos-abtn {
+      flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 4px;
+      padding: 9px 6px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--bg-primary); color: var(--text-secondary);
+      font-family: inherit; font-size: 0.73rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .pos-abtn:hover { background: var(--bg-hover); border-color: rgba(148,163,184,0.25); color: var(--text-primary); transform: translateY(-1px); }
+    .pos-abtn.abtn-accent { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.25); color: var(--accent); }
+
+    .partial-badge-new {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.25); border-radius: 6px;
+      font-size: 0.68rem; font-weight: 600; color: var(--success); margin-bottom: 8px;
+    }
+
+    /* ── NEW TRADE HISTORY ITEMS ─────────────── */
+    .hist-item {
+      display: flex; align-items: center; gap: 11px;
+      padding: 13px 14px; background: var(--bg-primary);
+      border-radius: 9px; margin-top: 8px; transition: all 0.2s; cursor: pointer;
+    }
+    .hist-item:hover { background: var(--bg-hover); }
+    .hist-bar { width: 3px; height: 34px; border-radius: 3px; flex-shrink: 0; }
+    .hist-bar.hw { background: var(--success); box-shadow: 0 0 6px rgba(16,185,129,0.3); }
+    .hist-bar.hl { background: var(--danger); box-shadow: 0 0 6px rgba(239,68,68,0.3); }
+    .hist-info { flex: 1; min-width: 0; }
+    .hist-name { font-weight: 600; font-size: 0.87rem; }
+    .hist-meta {
+      font-size: 0.7rem; color: var(--text-secondary); margin-top: 2px;
+      display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+    }
+    .hist-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-secondary); opacity: 0.4; flex-shrink: 0; }
+    .hist-pnl { text-align: right; flex-shrink: 0; }
+    .hist-pnl .hval { font-weight: 700; font-size: 0.9rem; }
+    .hist-pnl .hval.hw { color: var(--success); }
+    .hist-pnl .hval.hl { color: var(--danger); }
+    .hist-pnl .hpct { font-size: 0.68rem; opacity: 0.65; }
+    .hist-pnl .hpct.hw { color: var(--success); }
+    .hist-pnl .hpct.hl { color: var(--danger); }
 </style>
     <!-- Supabase JS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1378,53 +1511,53 @@ const ALL_BADGES = {
 const LEVELS = [{
   level: 1,
   xp: 0,
-  name: 'Newbie',
+  name: 'Normie',
   icon: '🌱'
 }, {
   level: 2,
-  xp: 100,
-  name: 'Beginner',
-  icon: '📚'
+  xp: 500,
+  name: 'Observer',
+  icon: '👀'
 }, {
   level: 3,
-  xp: 300,
-  name: 'Learning',
-  icon: '🎯'
+  xp: 1500,
+  name: 'Ape',
+  icon: '🐸'
 }, {
   level: 4,
-  xp: 600,
-  name: 'Trader',
-  icon: '📊'
+  xp: 3500,
+  name: 'Degen',
+  icon: '🎰'
 }, {
   level: 5,
-  xp: 1000,
-  name: 'Skilled',
-  icon: '💪'
-}, {
-  level: 6,
-  xp: 1500,
-  name: 'Advanced',
+  xp: 7000,
+  name: 'True Degen',
   icon: '🔥'
 }, {
-  level: 7,
-  xp: 2200,
-  name: 'Expert',
-  icon: '⚡'
-}, {
-  level: 8,
-  xp: 3000,
-  name: 'Pro',
+  level: 6,
+  xp: 12000,
+  name: 'Diamond Hands',
   icon: '💎'
 }, {
+  level: 7,
+  xp: 20000,
+  name: 'Master Degen',
+  icon: '🧠'
+}, {
+  level: 8,
+  xp: 35000,
+  name: 'Whale',
+  icon: '🐋'
+}, {
   level: 9,
-  xp: 4000,
-  name: 'Master',
+  xp: 60000,
+  name: 'Alpha Caller',
   icon: '👑'
 }, {
   level: 10,
-  xp: 5500,
-  name: 'Legend',
-  icon: '🏆'
+  xp: 100000,
+  name: 'Insider',
+  icon: '🏴‍☠️'
 }];
 function Toast({
   message,
@@ -3482,43 +3615,43 @@ function XPTableModal({
   }];
   const levels = [{
     level: 1,
-    name: '🌱 Rookie',
+    name: '🌱 Normie',
     xp: '0'
   }, {
     level: 2,
-    name: '☸ Sailor',
+    name: '👀 Observer',
     xp: '500'
   }, {
     level: 3,
-    name: '🧭 Navigator',
+    name: '🐸 Ape',
     xp: '1.500'
   }, {
     level: 4,
-    name: '⚔️ Corsair',
+    name: '🎰 Degen',
     xp: '3.500'
   }, {
     level: 5,
-    name: '🛡️ Experienced',
+    name: '🔥 True Degen',
     xp: '7.000'
   }, {
     level: 6,
-    name: '🎯 Skilled',
+    name: '💎 Diamond Hands',
     xp: '12.000'
   }, {
     level: 7,
-    name: '💎 Veteran',
+    name: '🧠 Master Degen',
     xp: '20.000'
   }, {
     level: 8,
-    name: '🚀 Elite',
+    name: '🐋 Whale',
     xp: '35.000'
   }, {
     level: 9,
-    name: '👑 Legendary',
+    name: '👑 Alpha Caller',
     xp: '60.000'
   }, {
     level: 10,
-    name: '⭐ Immortal',
+    name: '🏴‍☠️ Insider',
     xp: '100.000'
   }];
   return /*#__PURE__*/React.createElement("div", {
@@ -4252,6 +4385,7 @@ function HelmApp() {
   const [usernameDraft, setUsernameDraft] = useState('');
   const [showBankrupt, setShowBankrupt] = useState(false);
   const [showMissions, setShowMissions] = useState(false);
+  const [expandedTrades, setExpandedTrades] = useState({});
   const [adWatching, setAdWatching] = useState(false);
   const [adTimer, setAdTimer] = useState(0);
   const [ranking, setRanking] = useState([]);
@@ -4976,11 +5110,12 @@ function HelmApp() {
     if (id === 'login_streak') return d['login_streak_week'] === weekStr();
     if (id === 'vote_narrative') return d['vote_narrative_week'] === weekStr();
     if (id === 'invite_friend') return d['invite_friend_week'] === weekStr();
+    if (id === 'setup_username') return d['setup_username_done'] === true;
     return d[`${id}_${todayStr()}`] === true;
   };
   const completeMission = id => {
     const d = getMissionsData();
-    if (id === 'login_streak') d['login_streak_week'] = weekStr();else if (id === 'vote_narrative') d['vote_narrative_week'] = weekStr();else if (id === 'invite_friend') d['invite_friend_week'] = weekStr();else d[`${id}_${todayStr()}`] = true;
+    if (id === 'login_streak') d['login_streak_week'] = weekStr();else if (id === 'vote_narrative') d['vote_narrative_week'] = weekStr();else if (id === 'invite_friend') d['invite_friend_week'] = weekStr();else if (id === 'setup_username') d['setup_username_done'] = true;else d[`${id}_${todayStr()}`] = true;
     saveMissionsData(d);
     const mission = MISSIONS.find(m => m.id === id);
     if (!mission) return;
@@ -4989,7 +5124,7 @@ function HelmApp() {
       balance: (prev.balance || 0) + mission.reward
     }));
     showToast(`+${mission.reward} SOL — ${mission.label} ✅`, 'success');
-    addXP(50, `✅ Mission: ${mission.label}`);
+    if (id !== 'setup_username') addXP(50, `✅ Mission: ${mission.label}`);
     setShowMissions(false);
     setShowBankrupt(false);
   };
@@ -5942,9 +6077,9 @@ function HelmApp() {
     }
   }), settingsOpen && /*#__PURE__*/React.createElement("div", {
     style: {
-      position: 'absolute',
-      right: 0,
-      top: 'calc(100% + 8px)',
+      position: 'fixed',
+      right: '12px',
+      top: '70px',
       zIndex: 1200,
       background: 'var(--bg-card)',
       border: '1px solid var(--border)',
@@ -6013,14 +6148,14 @@ function HelmApp() {
       cursor: 'pointer'
     }
   }, "\uD83D\uDDFA\uFE0F Restart Tutorial"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
+    onClick: async () => {
       if (confirm('Log out?')) {
         localStorage.removeItem('helmUser');
         localStorage.removeItem('helmUserKey');
-        setUser(null);
-        showToast('Logged out', 'success');
+        localStorage.removeItem('helmAuthKey');
+        await window.authService.signOut();
+        window.location.reload();
       }
-      setSettingsOpen(false);
     },
     className: "logout-btn",
     style: {
@@ -7246,277 +7381,147 @@ function HelmApp() {
   }, "\uD83D\uDDD1\uFE0F Reset Trades"))), /*#__PURE__*/React.createElement("div", {
     className: "card"
   }, /*#__PURE__*/React.createElement("h3", null, "Active Positions (", user.trades?.filter(t => t.status === 'active').length || 0, ")"), user.trades?.filter(t => t.status === 'active').length === 0 ? /*#__PURE__*/React.createElement("p", {
-    style: {
-      color: 'var(--text-secondary)',
-      marginTop: '15px'
-    }
+    style: { color: 'var(--text-secondary)', marginTop: '15px' }
   }, "No active trades. Go to Analysis tab to buy tokens!") : user.trades.filter(t => t.status === 'active').map(trade => {
     const currentPrice = trade.currentPrice || trade.avgEntryPrice;
     const priceChange = (currentPrice - trade.avgEntryPrice) / trade.avgEntryPrice * 100;
     const partialPnl = (trade.partialExits || []).reduce((sum, exit) => sum + exit.pnl, 0);
     const unrealizedPnl = trade.totalInvested * (priceChange / 100);
     const totalPnl = partialPnl + unrealizedPnl - (trade.slippageCost || 0);
+    const isExpanded = expandedTrades[trade.id] || false;
+    const sym = (trade.tokenSymbol || 'TKN').slice(0, 3).toUpperCase();
     return /*#__PURE__*/React.createElement("div", {
       key: trade.id,
-      className: "slide-in",
-      style: {
-        background: 'var(--bg-primary)',
-        padding: '20px',
-        borderRadius: '10px',
-        marginTop: '15px',
-        border: `1px solid ${totalPnl >= 0 ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-        cursor: 'pointer',
-        transition: 'border-color 0.2s'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      onClick: () => setPortfolioModal(trade),
-      style: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: '15px',
-        flexWrap: 'wrap',
-        gap: '8px'
-      }
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px'
-      }
-    }, /*#__PURE__*/React.createElement("h3", {
-      style: {
-        cursor: 'pointer'
-      }
-    }, trade.tokenSymbol), /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: '0.7rem',
-        padding: '2px 8px',
-        borderRadius: '10px',
-        background: 'var(--bg-secondary)',
-        color: 'var(--text-secondary)'
-      }
-    }, "details"), trade.buyReason && /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: '0.7rem',
-        padding: '2px 8px',
-        borderRadius: '10px',
-        background: 'rgba(59,130,246,0.15)',
-        color: 'var(--accent)'
-      }
-    }, trade.buyReason), trade.slippagePct && /*#__PURE__*/React.createElement("span", {
-      title: `Slippage cost: -${(trade.slippageCost || 0).toFixed(4)} SOL`,
-      style: {
-        fontSize: '0.68rem',
-        padding: '2px 7px',
-        borderRadius: '10px',
-        background: 'rgba(239,68,68,0.12)',
-        color: 'var(--danger)'
-      }
-    }, "~", (trade.slippagePct * 100).toFixed(1), "% slip")), /*#__PURE__*/React.createElement("small", {
-      style: {
-        color: 'var(--text-secondary)'
-      }
-    }, trade.tokenName, " \u2022 ", trade.entries.length, " ", trade.entries.length === 1 ? 'entry' : 'entries')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        textAlign: 'right'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: '1.2rem',
-        fontWeight: 'bold',
-        color: totalPnl >= 0 ? 'var(--success)' : 'var(--danger)'
-      }
-    }, totalPnl >= 0 ? '+' : '', totalPnl.toFixed(3), " SOL"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: '0.8rem',
-        color: totalPnl >= 0 ? 'var(--success)' : 'var(--danger)',
-        opacity: 0.75
-      }
-    }, totalPnl >= 0 ? '+' : '', toUSD(Math.abs(totalPnl))), /*#__PURE__*/React.createElement("small", {
-      style: {
-        color: priceChange >= 0 ? 'var(--success)' : 'var(--danger)'
-      }
-    }, priceChange >= 0 ? '+' : '', priceChange.toFixed(1), "%"))), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-        gap: '10px',
-        marginBottom: '15px'
-      }
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", {
-      style: {
-        color: 'var(--text-secondary)'
-      }
-    }, "Invested"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontWeight: 'bold'
-      }
-    }, trade.totalInvested.toFixed(3), " SOL"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: '0.75rem',
-        color: 'rgba(255,255,255,0.4)',
-        marginTop: '1px'
-      }
-    }, toUSD(trade.totalInvested))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", {
-      style: {
-        color: 'var(--text-secondary)'
-      }
-    }, "Avg Price"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontWeight: 'bold'
-      }
-    }, "$", trade.avgEntryPrice.toFixed(8))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("small", {
-      style: {
-        color: 'var(--text-secondary)'
-      }
-    }, "Current Price"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontWeight: 'bold'
-      }
-    }, "$", currentPrice.toFixed(8)))), (trade.partialExits || []).length > 0 && /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginBottom: '15px',
-        padding: '10px',
-        background: 'var(--bg-secondary)',
-        borderRadius: '6px'
-      }
-    }, /*#__PURE__*/React.createElement("small", {
-      style: {
-        color: 'var(--text-secondary)'
-      }
-    }, "Partial Exits: ", trade.partialExits.length), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontWeight: 'bold',
-        color: 'var(--success)'
-      }
-    }, "Realized: +", partialPnl.toFixed(3), " SOL")), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        gap: '8px',
-        flexWrap: 'wrap',
-        marginTop: '15px',
-        alignItems: 'center'
-      }
-    }, /*#__PURE__*/React.createElement("button", {
-      onClick: e => {
-        e.stopPropagation();
-        handleDCA(trade);
-      },
-      className: "success",
-      style: {
-        fontSize: '0.85rem'
-      }
-    }, "\uD83D\uDCC9 DCA"), /*#__PURE__*/React.createElement("button", {
-      onClick: e => {
-        e.stopPropagation();
-        handlePartialSell(trade);
-      },
-      className: "warning",
-      style: {
-        fontSize: '0.85rem'
-      }
-    }, "\uD83D\uDCCA Partial Sell"), /*#__PURE__*/React.createElement("button", {
-      onClick: e => {
-        e.stopPropagation();
-        handleCloseTrade(trade.id);
-      },
-      className: "danger",
-      style: {
-        fontSize: '0.85rem'
-      }
-    }, "\uD83D\uDCB0 Close Position"), /*#__PURE__*/React.createElement("button", {
-      onClick: e => {
-        e.stopPropagation();
-        updateTradePrice(trade);
-      },
-      style: {
-        fontSize: '0.85rem'
-      }
-    }, "\uD83D\uDD04 Update"), /*#__PURE__*/React.createElement("button", {
-      onClick: e => {
-        e.stopPropagation();
-        window.open(`https://dexscreener.com/solana/${trade.tokenAddress}`, '_blank');
-      },
-      style: {
-        fontSize: '0.75rem',
-        padding: '6px 10px',
-        margin: 0,
-        background: 'rgba(16,185,129,0.15)',
-        border: '1px solid var(--success)',
-        borderRadius: '6px',
-        color: 'var(--success)',
-        cursor: 'pointer'
-      }
-    }, "\uD83D\uDCC8 DEX"), trade.tokenAddress && /*#__PURE__*/React.createElement("button", {
-      onClick: e => {
-        e.stopPropagation();
-        setChartTrade(trade);
-      },
-      style: {
-        fontSize: '0.75rem',
-        padding: '6px 10px',
-        margin: 0,
-        background: 'rgba(139,92,246,0.15)',
-        border: '1px solid rgba(139,92,246,0.5)',
-        borderRadius: '6px',
-        color: '#a78bfa',
-        cursor: 'pointer'
-      }
-    }, "\uD83D\uDCCA Chart")));
-  })), /*#__PURE__*/React.createElement("div", {
+      className: `pos-card ${totalPnl >= 0 ? 'pos-win' : 'pos-loss'} slide-in`
+    },
+    /* Summary row - always visible */
+    React.createElement("div", {
+      className: "pos-summary",
+      onClick: () => setExpandedTrades(prev => ({...prev, [trade.id]: !prev[trade.id]}))
+    },
+      React.createElement("div", { className: "pos-left" },
+        React.createElement("div", { className: "token-avatar",
+          style: totalPnl >= 0 ? { color: 'var(--success)', borderColor: 'rgba(16,185,129,0.2)' } : {}
+        }, sym),
+        React.createElement("div", { className: "token-info" },
+          React.createElement("div", { className: "token-name-row" },
+            trade.tokenSymbol,
+            trade.buyReason && React.createElement("span", { className: "token-tag" }, trade.buyReason)
+          ),
+          React.createElement("div", { className: "token-meta-line" },
+            trade.entries.length, trade.entries.length === 1 ? ' entry' : ' entries',
+            ' \u00B7 ', trade.totalInvested.toFixed(3), ' SOL invested'
+          )
+        )
+      ),
+      React.createElement("div", { className: "pos-right" },
+        React.createElement("div", { className: `pnl-val ${totalPnl >= 0 ? 'up' : 'down'}` },
+          totalPnl >= 0 ? '+' : '', totalPnl.toFixed(3), ' SOL'
+        ),
+        React.createElement("div", { className: `pnl-pct ${priceChange >= 0 ? 'up' : 'down'}` },
+          priceChange >= 0 ? '+' : '', priceChange.toFixed(1), '%',
+          React.createElement("span", { className: `expand-arrow ${isExpanded ? 'open' : ''}` }, ' \u25BC')
+        )
+      )
+    ),
+    /* Quick actions - always visible */
+    React.createElement("div", { className: "pos-quick" },
+      React.createElement("button", {
+        className: "pos-qbtn qsell",
+        onClick: e => { e.stopPropagation(); handleCloseTrade(trade.id); }
+      }, "Close Position"),
+      React.createElement("button", {
+        className: "pos-qbtn qupdate",
+        onClick: e => { e.stopPropagation(); updateTradePrice(trade); }
+      }, "\uD83D\uDD04 Update")
+    ),
+    /* Expandable details */
+    React.createElement("div", { className: `pos-details ${isExpanded ? 'open' : ''}` },
+      React.createElement("div", { className: "pos-details-inner" },
+        /* Partial exits badge */
+        (trade.partialExits || []).length > 0 && React.createElement("div", { className: "partial-badge-new", style: { marginTop: '12px' } },
+          '\u2705 ', trade.partialExits.length, ' partial exit', trade.partialExits.length > 1 ? 's' : '',
+          ' \u00B7 +', partialPnl.toFixed(3), ' SOL realized'
+        ),
+        /* Stats grid */
+        React.createElement("div", { className: "pos-stats-grid" },
+          React.createElement("div", { className: "pos-stat" },
+            React.createElement("div", { className: "ps-label" }, "Invested"),
+            React.createElement("div", { className: "ps-value" }, trade.totalInvested.toFixed(3), ' SOL')
+          ),
+          React.createElement("div", { className: "pos-stat" },
+            React.createElement("div", { className: "ps-label" }, "Avg Price"),
+            React.createElement("div", { className: "ps-value" }, '$', trade.avgEntryPrice.toFixed(8))
+          ),
+          React.createElement("div", { className: "pos-stat" },
+            React.createElement("div", { className: "ps-label" }, "Current"),
+            React.createElement("div", { className: "ps-value" }, '$', currentPrice.toFixed(8))
+          )
+        ),
+        /* Action buttons */
+        React.createElement("div", { className: "pos-actions" },
+          React.createElement("button", {
+            className: "pos-abtn abtn-accent",
+            onClick: e => { e.stopPropagation(); handleDCA(trade); }
+          }, "\uD83D\uDCC9 DCA"),
+          React.createElement("button", {
+            className: "pos-abtn",
+            onClick: e => { e.stopPropagation(); handlePartialSell(trade); }
+          }, "\uD83D\uDCCA Partial Sell"),
+          React.createElement("button", {
+            className: "pos-abtn",
+            onClick: e => { e.stopPropagation(); window.open('https://dexscreener.com/solana/' + trade.tokenAddress, '_blank'); }
+          }, "\uD83D\uDCC8 DEX"),
+          trade.tokenAddress && React.createElement("button", {
+            className: "pos-abtn",
+            onClick: e => { e.stopPropagation(); setChartTrade(trade); }
+          }, "\uD83D\uDCCA Chart"),
+          React.createElement("button", {
+            className: "pos-abtn",
+            onClick: e => { e.stopPropagation(); setPortfolioModal(trade); }
+          }, "\u2139\uFE0F Details")
+        )
+      )
+    )
+    );
+  })),
+  /* ── TRADE HISTORY ────────────────────── */
+  /*#__PURE__*/React.createElement("div", {
     className: "card"
   }, /*#__PURE__*/React.createElement("h3", null, "Trade History (", user.trades?.filter(t => t.status === 'closed').length || 0, ")"), user.trades?.filter(t => t.status === 'closed').length === 0 ? /*#__PURE__*/React.createElement("p", {
-    style: {
-      color: 'var(--text-secondary)',
-      marginTop: '15px'
-    }
+    style: { color: 'var(--text-secondary)', marginTop: '15px' }
   }, "No closed trades yet") : user.trades.filter(t => t.status === 'closed').slice().reverse().map(trade => {
     const totalPnl = trade.totalPnl || 0;
-    const pnlPercentage = totalPnl / trade.totalInvested * 100;
-    return /*#__PURE__*/React.createElement("div", {
+    const pnlPct = totalPnl / trade.totalInvested * 100;
+    const isWin = totalPnl >= 0;
+    return React.createElement("div", {
       key: trade.id,
-      style: {
-        background: 'var(--bg-primary)',
-        padding: '12px',
-        borderRadius: '8px',
-        margin: '8px 0',
-        borderLeft: `3px solid ${totalPnl >= 0 ? 'var(--success)' : 'var(--danger)'}`
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '10px'
-      }
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, trade.tokenSymbol), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("small", {
-      style: {
-        color: 'var(--text-secondary)'
-      }
-    }, trade.entries?.length || 1, " entries \u2022 Avg: $", trade.avgEntryPrice.toFixed(8))), /*#__PURE__*/React.createElement("div", {
-      style: {
-        textAlign: 'right'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontWeight: 'bold',
-        fontSize: '1.1rem',
-        color: totalPnl >= 0 ? 'var(--success)' : 'var(--danger)'
-      }
-    }, totalPnl >= 0 ? '+' : '', totalPnl.toFixed(3), " SOL"), /*#__PURE__*/React.createElement("small", {
-      style: {
-        color: 'var(--text-secondary)'
-      }
-    }, "(", pnlPercentage >= 0 ? '+' : '', pnlPercentage.toFixed(1), "%)"))), (trade.partialExits || []).length > 0 && /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginTop: '8px',
-        fontSize: '0.85rem',
-        color: 'var(--text-secondary)'
-      }
-    }, trade.partialExits.length, " partial exit(s)"));
-  }))), activeTab === 'narratives' && /*#__PURE__*/React.createElement("div", {
+      className: "hist-item"
+    },
+      React.createElement("div", { className: `hist-bar ${isWin ? 'hw' : 'hl'}` }),
+      React.createElement("div", { className: "hist-info" },
+        React.createElement("div", { className: "hist-name" }, trade.tokenSymbol),
+        React.createElement("div", { className: "hist-meta" },
+          trade.entries?.length || 1, ' entr', (trade.entries?.length || 1) === 1 ? 'y' : 'ies',
+          React.createElement("span", { className: "hist-dot" }),
+          'Avg $', trade.avgEntryPrice.toFixed(8),
+          (trade.partialExits || []).length > 0 && React.createElement(React.Fragment, null,
+            React.createElement("span", { className: "hist-dot" }),
+            trade.partialExits.length, ' partial exit', trade.partialExits.length > 1 ? 's' : ''
+          )
+        )
+      ),
+      React.createElement("div", { className: "hist-pnl" },
+        React.createElement("div", { className: `hval ${isWin ? 'hw' : 'hl'}` },
+          isWin ? '+' : '', totalPnl.toFixed(3), ' SOL'
+        ),
+        React.createElement("div", { className: `hpct ${isWin ? 'hw' : 'hl'}` },
+          '(', pnlPct >= 0 ? '+' : '', pnlPct.toFixed(1), '%)'
+        )
+      )
+    );
+  })),
+  ), activeTab === 'narratives' && /*#__PURE__*/React.createElement("div", {
     className: "fade-in"
   }, /*#__PURE__*/React.createElement("div", {
     style: {
