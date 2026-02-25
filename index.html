@@ -773,6 +773,103 @@
     .hist-pnl .hpct { font-size: 0.68rem; opacity: 0.65; }
     .hist-pnl .hpct.hw { color: var(--success); }
     .hist-pnl .hpct.hl { color: var(--danger); }
+
+    /* ── STARTER FLOW ────────────────────── */
+    .sf-overlay {
+      position: fixed; inset: 0; z-index: 2000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .sf-backdrop {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(4px);
+    }
+    .sf-card {
+      position: relative; z-index: 1;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px; max-width: 420px; width: 100%;
+      padding: 36px 28px; text-align: center;
+      box-shadow: 0 20px 80px rgba(0,0,0,0.6);
+      animation: sfSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes sfSlideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .sf-icon { font-size: 3rem; margin-bottom: 16px; }
+    .sf-title {
+      font-size: 1.3rem; font-weight: 800; margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    .sf-desc {
+      font-size: 0.88rem; color: var(--text-secondary);
+      line-height: 1.55; margin-bottom: 24px;
+    }
+    .sf-btn {
+      width: 100%; padding: 14px; border-radius: 12px; border: none;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: all 0.2s;
+    }
+    .sf-btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      color: white;
+    }
+    .sf-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,246,0.3); }
+    .sf-btn-skip {
+      background: none; border: none; color: var(--text-secondary);
+      font-size: 0.78rem; padding: 12px; cursor: pointer; font-family: inherit;
+      margin-top: 8px;
+    }
+    .sf-btn-skip:hover { color: var(--text-primary); }
+    .sf-steps {
+      display: flex; justify-content: center; gap: 6px; margin-bottom: 24px;
+    }
+    .sf-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--border); transition: all 0.3s;
+    }
+    .sf-dot.active { background: var(--accent); width: 24px; border-radius: 4px; }
+    .sf-dot.done { background: var(--success); }
+    .sf-highlight-box {
+      background: var(--bg-primary); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px; margin: 16px 0;
+      text-align: left;
+    }
+    .sf-flag { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 0.82rem; }
+    .sf-flag-green { color: var(--success); }
+    .sf-flag-red { color: var(--danger); }
+    .sf-token-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25);
+      border-radius: 8px; padding: 6px 14px; font-weight: 700;
+      color: var(--accent); margin: 8px 0;
+    }
+    .sf-tooltip {
+      position: fixed; z-index: 2001;
+      background: var(--bg-card); border: 1px solid var(--accent);
+      border-radius: 14px; padding: 18px 22px; max-width: 320px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      animation: sfSlideUp 0.3s ease;
+    }
+    .sf-tooltip::after {
+      content: ''; position: absolute; top: -8px; left: 50%;
+      transform: translateX(-50%); width: 16px; height: 16px;
+      background: var(--bg-card); border-left: 1px solid var(--accent);
+      border-top: 1px solid var(--accent); transform: translateX(-50%) rotate(45deg);
+    }
+    .sf-tooltip.arrow-bottom::after {
+      top: auto; bottom: -8px;
+      border-left: none; border-top: none;
+      border-right: 1px solid var(--accent); border-bottom: 1px solid var(--accent);
+    }
+    .sf-pulse {
+      animation: sfPulse 2s infinite;
+    }
+    @keyframes sfPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(59,130,246,0); }
+    }
 </style>
     <!-- Supabase JS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -4395,6 +4492,32 @@ function HelmApp() {
   const [solPrice, setSolPrice] = useState(150);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(-1); // -1 = inactive
+  const [starterFlow, setStarterFlow] = useState(-1); // -1 = inactive, 0-4 = steps
+  const STARTER_TOKEN = 'pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn'; // PUMP
+
+  // StarterFlow: auto-advance based on state changes
+  useEffect(() => {
+    if (starterFlow === 1) {
+      // Step 1: switch to analysis tab and pre-fill token
+      setActiveTab('analysis');
+      setTokenAddress(STARTER_TOKEN);
+    }
+  }, [starterFlow]);
+
+  // StarterFlow: detect analysis loaded → advance to step 2
+  useEffect(() => {
+    if (starterFlow === 1 && analysis) {
+      setTimeout(() => setStarterFlow(2), 600);
+    }
+  }, [analysis, starterFlow]);
+
+  // StarterFlow: detect first trade made → advance to step 4 (congrats)
+  useEffect(() => {
+    if ((starterFlow === 2 || starterFlow === 3) && user?.trades?.filter(t => t.status === 'active').length > 0) {
+      setActiveTab('portfolio');
+      setTimeout(() => setStarterFlow(4), 600);
+    }
+  }, [user?.trades?.length, starterFlow]);
   const [userLoading, setUserLoading] = useState(true); // ⬅️ loading enquanto busca usuário
   
   // Helper: migrar trades antigos para nova estrutura
@@ -5274,7 +5397,7 @@ function HelmApp() {
 
     setUser(userData);
     showToast(isNew ? 'Welcome to HELM! 🎉' : 'Welcome back, ' + username + '! 👋', 'success');
-    if (isNew) setTimeout(() => setTutorialStep(0), 600);
+    if (isNew && !localStorage.getItem('helmStarterDone')) setTimeout(() => setStarterFlow(0), 800);
   };
   const analyzeToken = async () => {
     if (!tokenAddress) {
@@ -6127,6 +6250,25 @@ function HelmApp() {
       cursor: 'pointer'
     }
   }, "\uD83D\uDDFA\uFE0F Restart Tutorial"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      localStorage.removeItem('helmStarterDone');
+      setStarterFlow(0);
+      setAnalysis(null);
+      setTokenAddress('');
+      setSettingsOpen(false);
+    },
+    style: {
+      width: '100%',
+      margin: '0 0 8px',
+      padding: '9px',
+      fontSize: '0.85rem',
+      background: 'rgba(139,92,246,0.08)',
+      border: '1px solid rgba(139,92,246,0.25)',
+      color: '#a78bfa',
+      borderRadius: '8px',
+      cursor: 'pointer'
+    }
+  }, "\uD83C\uDF31 Restart Starter Flow"), /*#__PURE__*/React.createElement("button", {
     onClick: async () => {
       if (confirm('Log out?')) {
         localStorage.removeItem('helmUser');
@@ -7896,7 +8038,163 @@ React.createElement("div",{key:"HTX / OKX fd",className:"u-card-inner"},
     step: tutorialStep,
     onNext: () => setTutorialStep(s => s >= 7 ? -1 : s + 1),
     onSkip: () => setTutorialStep(-1)
-  }), buyModal?.type === 'ape' && /*#__PURE__*/React.createElement(ApeModal, {
+  }),
+  /* ── STARTER FLOW ──────────────────── */
+  starterFlow >= 0 && (() => {
+    const skipAll = () => { setStarterFlow(-1); localStorage.setItem('helmStarterDone', '1'); };
+    const dots = (current, total) => React.createElement("div", { className: "sf-steps" },
+      Array.from({ length: total }, (_, i) => React.createElement("div", {
+        key: i,
+        className: `sf-dot ${i === current ? 'active' : i < current ? 'done' : ''}`
+      }))
+    );
+
+    // Step 0: Welcome
+    if (starterFlow === 0) {
+      return React.createElement("div", { className: "sf-overlay" },
+        React.createElement("div", { className: "sf-backdrop" }),
+        React.createElement("div", { className: "sf-card" },
+          React.createElement("div", { className: "sf-icon" }, "☸️"),
+          React.createElement("div", { className: "sf-title" }, "Welcome to HELM!"),
+          React.createElement("div", { className: "sf-desc" },
+            "You have ", React.createElement("strong", null, "5 SOL"), " of paper money to trade Solana memecoins. ",
+            "Let's make your first trade together — I'll walk you through it step by step."
+          ),
+          React.createElement("div", { className: "sf-highlight-box" },
+            React.createElement("div", { className: "sf-flag sf-flag-green" }, "✅ Analyze tokens with live data from DexScreener"),
+            React.createElement("div", { className: "sf-flag sf-flag-green" }, "✅ Practice entries, DCA, and partial exits"),
+            React.createElement("div", { className: "sf-flag sf-flag-green" }, "✅ Track your P&L, XP, and global ranking"),
+            React.createElement("div", { className: "sf-flag sf-flag-green" }, "✅ No real money at risk — ever")
+          ),
+          dots(0, 4),
+          React.createElement("button", {
+            className: "sf-btn sf-btn-primary",
+            onClick: () => setStarterFlow(1)
+          }, "🚀 Let's Go!"),
+          React.createElement("button", {
+            className: "sf-btn-skip",
+            onClick: skipAll
+          }, "I know what I'm doing — skip")
+        )
+      );
+    }
+
+    // Step 1: Analyze prompt (token is pre-filled)
+    if (starterFlow === 1 && !analysis) {
+      return React.createElement("div", { className: "sf-overlay", style: { alignItems: 'flex-start', paddingTop: '160px', pointerEvents: 'none' } },
+        React.createElement("div", { className: "sf-backdrop", style: { background: 'rgba(0,0,0,0.5)', pointerEvents: 'none' } }),
+        React.createElement("div", { className: "sf-card", style: { maxWidth: '380px', pointerEvents: 'auto' } },
+          dots(1, 4),
+          React.createElement("div", { className: "sf-icon", style: { fontSize: '2rem' } }, "🔍"),
+          React.createElement("div", { className: "sf-title", style: { fontSize: '1.1rem' } }, "Your First Analysis"),
+          React.createElement("div", { className: "sf-desc" },
+            "I've loaded ", React.createElement("span", { className: "sf-token-pill" }, "🚀 PUMP"),
+            " for you — the native token of pump.fun, Solana's biggest memecoin launchpad."
+          ),
+          React.createElement("div", { className: "sf-desc", style: { fontWeight: '600', color: 'var(--text-primary)' } },
+            "👆 Hit the ", React.createElement("span", { style: { color: 'var(--success)' } }, "🔍 Analyze"), " button above to scan this token."
+          ),
+          React.createElement("button", {
+            className: "sf-btn-skip",
+            onClick: skipAll
+          }, "Skip tutorial")
+        )
+      );
+    }
+
+    // Step 2: Analysis loaded — explain flags + prompt APE
+    if (starterFlow === 2) {
+      const greens = analysis?.greenFlags?.length || 0;
+      const reds = analysis?.redFlags?.length || 0;
+      return React.createElement("div", { className: "sf-overlay", style: { alignItems: 'flex-end', paddingBottom: '100px', pointerEvents: 'none' } },
+        React.createElement("div", { className: "sf-backdrop", style: { background: 'rgba(0,0,0,0.45)', pointerEvents: 'none' } }),
+        React.createElement("div", { className: "sf-card", style: { maxWidth: '380px', pointerEvents: 'auto' } },
+          dots(2, 4),
+          React.createElement("div", { className: "sf-icon", style: { fontSize: '2rem' } }, "📊"),
+          React.createElement("div", { className: "sf-title", style: { fontSize: '1.1rem' } }, "Read the Analysis"),
+          React.createElement("div", { className: "sf-desc" },
+            "HELM found ",
+            React.createElement("strong", { style: { color: 'var(--success)' } }, greens, " green flag", greens !== 1 ? 's' : ''),
+            " and ",
+            React.createElement("strong", { style: { color: 'var(--danger)' } }, reds, " red flag", reds !== 1 ? 's' : ''),
+            ". Green flags = bullish signals. Red flags = warnings."
+          ),
+          React.createElement("div", { className: "sf-highlight-box", style: { fontSize: '0.82rem' } },
+            React.createElement("div", null, "🟢 ", React.createElement("strong", null, "Green:"), " High volume, strong holders, growing community"),
+            React.createElement("div", { style: { marginTop: '4px' } }, "🔴 ", React.createElement("strong", null, "Red:"), " Low liquidity, whale concentration, snipers")
+          ),
+          React.createElement("div", { className: "sf-desc", style: { fontWeight: '600', color: 'var(--text-primary)', marginBottom: '12px' } },
+            "Scroll down and hit ", React.createElement("span", { style: { color: 'var(--success)' } }, "🚀 APE"),
+            " to enter your first position with 0.1 SOL!"
+          ),
+          React.createElement("button", {
+            className: "sf-btn sf-btn-primary",
+            onClick: () => setStarterFlow(3),
+            style: { fontSize: '0.85rem', padding: '11px' }
+          }, "Got it! 👍"),
+          React.createElement("button", {
+            className: "sf-btn-skip",
+            onClick: skipAll
+          }, "Skip tutorial")
+        )
+      );
+    }
+
+    // Step 3: Waiting for user to APE (subtle reminder)
+    if (starterFlow === 3) {
+      return React.createElement("div", {
+        style: {
+          position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)',
+          zIndex: 2001, background: 'var(--bg-card)', border: '1px solid var(--accent)',
+          borderRadius: '12px', padding: '12px 20px', boxShadow: '0 8px 30px rgba(0,0,0,0.4)',
+          display: 'flex', alignItems: 'center', gap: '10px', animation: 'sfSlideUp 0.3s ease',
+          maxWidth: '340px'
+        }
+      },
+        React.createElement("span", { style: { fontSize: '1.3rem' } }, "👇"),
+        React.createElement("span", { style: { fontSize: '0.82rem', color: 'var(--text-secondary)' } },
+          "Scroll down and tap ",
+          React.createElement("strong", { style: { color: 'var(--success)' } }, "🚀 APE"),
+          " to buy!"
+        ),
+        React.createElement("button", {
+          onClick: skipAll,
+          style: { background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1rem', padding: '0 0 0 8px' }
+        }, "✕")
+      );
+    }
+
+    // Step 4: Congrats!
+    if (starterFlow === 4) {
+      return React.createElement("div", { className: "sf-overlay" },
+        React.createElement("div", { className: "sf-backdrop" }),
+        React.createElement("div", { className: "sf-card" },
+          React.createElement("div", { className: "sf-icon" }, "🎉"),
+          React.createElement("div", { className: "sf-title" }, "First Trade Done!"),
+          React.createElement("div", { className: "sf-desc" },
+            "You just opened your first paper position! Here's what you can do next:"
+          ),
+          React.createElement("div", { className: "sf-highlight-box", style: { textAlign: 'left' } },
+            React.createElement("div", { className: "sf-flag" }, "📈 ", React.createElement("span", null, "Update price to see live P&L")),
+            React.createElement("div", { className: "sf-flag" }, "📉 ", React.createElement("span", null, "DCA if the price drops — average down")),
+            React.createElement("div", { className: "sf-flag" }, "💰 ", React.createElement("span", null, "Partial Sell to take some profits")),
+            React.createElement("div", { className: "sf-flag" }, "🎯 ", React.createElement("span", null, "Close Position when ready — pick a sell reason")),
+            React.createElement("div", { className: "sf-flag" }, "🏆 ", React.createElement("span", null, "Check Rankings to compete with other traders"))
+          ),
+          dots(3, 4),
+          React.createElement("button", {
+            className: "sf-btn sf-btn-primary",
+            onClick: skipAll
+          }, "Let's Trade! 🚀"),
+          React.createElement("div", {
+            style: { marginTop: '12px', fontSize: '0.75rem', color: 'var(--text-secondary)' }
+          }, "Tip: You can restart the tutorial anytime from ⚙️ Settings")
+        )
+      );
+    }
+
+    return null;
+  })(), buyModal?.type === 'ape' && /*#__PURE__*/React.createElement(ApeModal, {
     analysis: analysis,
     balance: user?.balance || 0,
     onConfirm: confirmApe,
