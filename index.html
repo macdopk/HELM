@@ -1700,7 +1700,7 @@ function ApeModal({
     style: {
       marginBottom: '4px'
     }
-  }, "\uD83D\uDE80 APE em ", analysis?.symbol), /*#__PURE__*/React.createElement("p", {
+  }, "\uD83D\uDE80 APE into ", analysis?.symbol), /*#__PURE__*/React.createElement("p", {
     style: {
       color: 'var(--text-secondary)',
       fontSize: '0.85rem',
@@ -1713,27 +1713,28 @@ function ApeModal({
       fontWeight: 'bold',
       fontSize: '0.9rem'
     }
-  }, "Quantidade (SOL)"), /*#__PURE__*/React.createElement("div", {
+  }, "Amount (SOL)"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: '8px',
       marginBottom: '12px'
     }
-  }, ['0.05', '0.1', '0.25', '0.5'].map(v => /*#__PURE__*/React.createElement("button", {
-    key: v,
+  }, [['0.1','0.1'], ['0.5','0.5'], ['1','1'], ['ALL', balance.toFixed(2)]].map(([label, v]) => /*#__PURE__*/React.createElement("button", {
+    key: label,
     onClick: () => setAmt(v),
     style: {
       flex: 1,
       margin: 0,
       padding: '8px 4px',
       fontSize: '0.82rem',
-      background: amt === v ? 'var(--accent)' : 'var(--bg-primary)',
-      border: `1px solid ${amt === v ? 'var(--accent)' : 'var(--border)'}`,
+      background: amt === v ? (label === 'ALL' ? 'var(--purple)' : 'var(--accent)') : 'var(--bg-primary)',
+      border: `1px solid ${amt === v ? (label === 'ALL' ? 'var(--purple)' : 'var(--accent)') : 'var(--border)'}`,
       color: amt === v ? 'white' : 'var(--text-secondary)',
       borderRadius: '6px',
-      cursor: 'pointer'
+      cursor: 'pointer',
+      fontWeight: label === 'ALL' ? '700' : '500'
     }
-  }, v))), /*#__PURE__*/React.createElement("input", {
+  }, label))), /*#__PURE__*/React.createElement("input", {
     value: amt,
     onChange: e => setAmt(e.target.value),
     type: "number",
@@ -1950,21 +1951,22 @@ function DCAModal({
       gap: '8px',
       marginBottom: '12px'
     }
-  }, ['0.05', '0.1', '0.25', '0.5'].map(v => /*#__PURE__*/React.createElement("button", {
-    key: v,
+  }, [['0.1','0.1'], ['0.5','0.5'], ['1','1'], ['ALL', balance.toFixed(2)]].map(([label, v]) => /*#__PURE__*/React.createElement("button", {
+    key: label,
     onClick: () => setAmt(v),
     style: {
       flex: 1,
       margin: 0,
       padding: '8px 4px',
       fontSize: '0.82rem',
-      background: amt === v ? 'var(--accent)' : 'var(--bg-primary)',
-      border: `1px solid ${amt === v ? 'var(--accent)' : 'var(--border)'}`,
+      background: amt === v ? (label === 'ALL' ? 'var(--purple)' : 'var(--accent)') : 'var(--bg-primary)',
+      border: `1px solid ${amt === v ? (label === 'ALL' ? 'var(--purple)' : 'var(--accent)') : 'var(--border)'}`,
       color: amt === v ? 'white' : 'var(--text-secondary)',
       borderRadius: '6px',
-      cursor: 'pointer'
+      cursor: 'pointer',
+      fontWeight: label === 'ALL' ? '700' : '500'
     }
-  }, v))), /*#__PURE__*/React.createElement("input", {
+  }, label))), /*#__PURE__*/React.createElement("input", {
     value: amt,
     onChange: e => setAmt(e.target.value),
     type: "number",
@@ -5407,13 +5409,13 @@ function HelmApp() {
     });
   };
   const confirmApe = (amount, reason) => {
-    if (isNaN(amount) || amount <= 0 || amount > user.balance) {
-      showToast('Insufficient balance!', 'error');
+    const slipPct = calcSlippage(analysis.volume24h);
+    const slipCost = amount * slipPct;
+    const effectiveAmount = amount + slipCost;
+    if (isNaN(amount) || amount <= 0 || effectiveAmount > user.balance) {
+      showToast('Insufficient balance (including slippage)!', 'error');
       return;
     }
-    const slipPct = calcSlippage(analysis.volume24h);
-    const slipCost = amount * slipPct; // SOL lost to slippage on buy
-    const effectiveAmount = amount + slipCost; // total deducted from balance
     const slippedPrice = analysis.price * (1 + slipPct); // entry price is worse
     const newTrade = {
       id: Date.now().toString(),
@@ -5456,13 +5458,13 @@ function HelmApp() {
     });
   };
   const confirmDCA = async (amount, trade) => {
-    if (isNaN(amount) || amount <= 0 || amount > user.balance) {
-      showToast('Insufficient balance!', 'error');
+    const dcaSlipPct = calcSlippage(analysis?.volume24h || 0);
+    const dcaSlipCost = amount * dcaSlipPct;
+    if (isNaN(amount) || amount <= 0 || (amount + dcaSlipCost) > user.balance) {
+      showToast('Insufficient balance (including slippage)!', 'error');
       return;
     }
     setBuyModal(null);
-    const dcaSlipPct = calcSlippage(analysis?.volume24h || 0);
-    const dcaSlipCost = amount * dcaSlipPct;
     try {
       const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${trade.tokenAddress}`);
       const data = await res.json();
@@ -5472,7 +5474,7 @@ function HelmApp() {
         amountSOL: amount,
         timestamp: new Date().toISOString()
       };
-      const updatedEntries = [...trade.entries, newEntry];
+      const updatedEntries = [...(trade.entries||[]), newEntry];
       const totalInvested = trade.totalInvested + amount;
       const avgEntryPrice = updatedEntries.reduce((sum, e) => sum + e.price * e.amountSOL, 0) / totalInvested;
       const updatedUser = {
@@ -5514,7 +5516,7 @@ function HelmApp() {
       const partialSlipPct = calcSlippage(partialVol || 0);
       const partialSlipCost = (sellAmount + sellAmount * (priceChange / 100)) * partialSlipPct;
       const pnl = sellAmount * (priceChange / 100) - partialSlipCost;
-      const returned = sellAmount + pnl;
+      const returned = Math.max(0, sellAmount + pnl);
       const remainingInvested = trade.totalInvested - sellAmount;
       if (remainingInvested < 0.01) {
         return handleCloseTrade(trade.id);
@@ -5536,7 +5538,7 @@ function HelmApp() {
         } : t)
       };
       setUser(updatedUser);
-      showToast(`Vendido ${percentage}%! P&L: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(3)} SOL`, pnl >= 0 ? 'success' : 'warning');
+      showToast(`Sold ${percentage}%! P&L: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(3)} SOL`, pnl >= 0 ? 'success' : 'warning');
     } catch (error) {
       showToast('Error fetching price', 'error');
     }
@@ -5561,7 +5563,7 @@ function HelmApp() {
       const exitSlipPct = calcSlippage(exitVol || (trade.slippagePct ? trade.slippagePct * 150000 : 0));
       const exitSlipCost = (trade.totalInvested + remainingPnl) * exitSlipPct;
       const totalPnl = partialPnl + remainingPnl - exitSlipCost;
-      const returned = trade.totalInvested + remainingPnl - exitSlipCost;
+      const returned = Math.max(0, trade.totalInvested + remainingPnl - exitSlipCost);
       const totalSlippage = (trade.slippageCost || 0) + exitSlipCost;
       const updatedUser = {
         ...user,
@@ -7386,7 +7388,7 @@ function HelmApp() {
             trade.buyReason && React.createElement("span", { className: "token-tag" }, trade.buyReason)
           ),
           React.createElement("div", { className: "token-meta-line" },
-            trade.entries.length, trade.entries.length === 1 ? ' entry' : ' entries',
+            (trade.entries||[]).length, (trade.entries||[]).length === 1 ? ' entry' : ' entries',
             ' \u00B7 ', trade.totalInvested.toFixed(3), ' SOL invested'
           )
         )
