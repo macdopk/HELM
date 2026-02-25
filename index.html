@@ -808,7 +808,7 @@ window.addEventListener('DOMContentLoaded', () => {
   
   if (typeof supabase === 'undefined') {
     console.error('❌ Supabase SDK não carregou!');
-    alert('Erro: Não foi possível carregar o sistema de autenticação. Verifique sua conexão.');
+    alert('Error: Could not load auth system. Check your connection.');
     return;
   }
   
@@ -830,7 +830,7 @@ window.addEventListener('DOMContentLoaded', () => {
     
   } catch (error) {
     console.error('❌ Erro ao inicializar Supabase:', error);
-    alert('Erro ao conectar com o servidor. Tente recarregar a página.');
+    alert('Error connecting to server. Please reload the page.');
   }
 });
 
@@ -4197,7 +4197,7 @@ function TutorialOverlay({
   }, {
     target: 'helm-missions',
     title: '📋 Missions & Rewards',
-    body: `Complete missions to earn SOL rewards — post in the community, vote on narratives, build win streaks, and more. Running low on balance? Missions help you refuel.`,
+    body: `Complete missions to earn SOL rewards — post in the community, build win streaks, and more. Running low on balance? Missions help you refuel.`,
     pos: 'bottom'
   }, {
     target: 'helm-ranking',
@@ -4207,7 +4207,7 @@ function TutorialOverlay({
   }, {
     target: 'helm-community',
     title: '💬 Community Tab',
-    body: `Share tips, post alpha, discuss narratives. Traders with good win rates can post in the Tips section. Vote on weekly narratives and earn XP for participating.`,
+    body: `Share tips, post alpha, discuss strategies. Traders with good win rates can post in the Tips section. Engage with the community and earn XP for participating.`,
     pos: 'bottom'
   }];
   const s = STEPS[step];
@@ -4432,7 +4432,6 @@ function HelmApp() {
           userData.trades = migrateTrades(userData.trades);
           setUser(userData);
           localStorage.setItem('helmUser', JSON.stringify(userData));
-          console.log('✅ Usuário carregado do cache:', userData.username);
 
           // Em background, verificar se Supabase tem dados mais frescos
           const key = localStorage.getItem('helmUserKey') || ('helmuser_' + (userData.username||'').toLowerCase());
@@ -4468,7 +4467,6 @@ function HelmApp() {
               freshData.trades = migrateTrades(freshData.trades);
               setUser(freshData);
               localStorage.setItem('helmUser', JSON.stringify(freshData));
-              console.log('🔄 Dados mais frescos carregados do Supabase');
             }
           };
           fetchFresh().catch(() => {});
@@ -4484,7 +4482,6 @@ function HelmApp() {
       // 2) Se não tem cache, verificar se está autenticado
       const authUser = window.authService?.getUser();
       if (!authUser) {
-        console.log('ℹ️ Sem authUser, aguardando login...');
         setUserLoading(false);
         return;
       }
@@ -4506,10 +4503,8 @@ function HelmApp() {
             entries: t.entries || [{price: t.avgEntryPrice||0, amountSOL: t.totalInvested||0, timestamp: t.openedAt||new Date().toISOString()}],
             partialExits: t.partialExits || [],
           })) : [];
-          console.log('✅ Usuário encontrado no Supabase:', userData.username);
         }
       } catch (e) {
-        console.log('ℹ️ Usuário não encontrado no Supabase, será criado...');
       }
 
       // 4) Se não existe no Supabase, tentar buscar pela chave antiga (helmuser_<username>)
@@ -4527,7 +4522,6 @@ function HelmApp() {
               userData.currentStreak = userData.currentStreak || 0;
               userData.analysisCount = userData.analysisCount || 0;
               userData.trades = Array.isArray(userData.trades) ? userData.trades : [];
-              console.log('✅ Usuário migrado da chave antiga:', userData.username);
               try { await helmStorage.set(authKey, JSON.stringify(userData), true); } catch(e2) {}
             }
           } catch (e) {}
@@ -4547,7 +4541,6 @@ function HelmApp() {
       }
 
       // 6) Se é novo, mostrar tela de username
-      console.log('ℹ️ Novo usuário, mostrando tela de username...');
       setUserLoading(false);
 
       } catch (err) {
@@ -5068,12 +5061,6 @@ function HelmApp() {
     desc: 'Log in 3 days in a row',
     reward: 0.5  // ESPECIAL
   }, {
-    id: 'setup_username',
-    icon: '✏️',
-    label: 'Set Your Username',
-    desc: 'Personalize your profile name',
-    reward: REWARD_SOL  // 0.2 SOL
-  }, {
     id: 'invite_friend',
     icon: '👥',
     label: 'Invite a Friend',
@@ -5110,12 +5097,11 @@ function HelmApp() {
     if (id === 'login_streak') return d['login_streak_week'] === weekStr();
     if (id === 'vote_narrative') return d['vote_narrative_week'] === weekStr();
     if (id === 'invite_friend') return d['invite_friend_week'] === weekStr();
-    if (id === 'setup_username') return d['setup_username_done'] === true;
     return d[`${id}_${todayStr()}`] === true;
   };
   const completeMission = id => {
     const d = getMissionsData();
-    if (id === 'login_streak') d['login_streak_week'] = weekStr();else if (id === 'vote_narrative') d['vote_narrative_week'] = weekStr();else if (id === 'invite_friend') d['invite_friend_week'] = weekStr();else if (id === 'setup_username') d['setup_username_done'] = true;else d[`${id}_${todayStr()}`] = true;
+    if (id === 'login_streak') d['login_streak_week'] = weekStr();else if (id === 'vote_narrative') d['vote_narrative_week'] = weekStr();else if (id === 'invite_friend') d['invite_friend_week'] = weekStr();else d[`${id}_${todayStr()}`] = true;
     saveMissionsData(d);
     const mission = MISSIONS.find(m => m.id === id);
     if (!mission) return;
@@ -5124,7 +5110,7 @@ function HelmApp() {
       balance: (prev.balance || 0) + mission.reward
     }));
     showToast(`+${mission.reward} SOL — ${mission.label} ✅`, 'success');
-    if (id !== 'setup_username') addXP(50, `✅ Mission: ${mission.label}`);
+    addXP(50, `✅ Mission: ${mission.label}`);
     setShowMissions(false);
     setShowBankrupt(false);
   };
@@ -5165,13 +5151,6 @@ function HelmApp() {
       });
     }, 1000);
   };
-
-  // Auto-complete username mission when username is set
-  useEffect(() => {
-    if (user?.username && user.username !== 'Demo User' && !isMissionDone('setup_username')) {
-      completeMission('setup_username');
-    }
-  }, [user?.username]);
 
   // Auto-complete vote_narrative mission when user votes
   const handleVoteWithMission = async id => {
@@ -5229,7 +5208,6 @@ function HelmApp() {
           if (userData.username !== username) {
             userData.username = username;
           }
-          console.log('✅ Usuário encontrado por auth_id:', userData.username);
         }
       } catch(e) {}
     }
@@ -5254,7 +5232,6 @@ function HelmApp() {
           if (authUser) {
             userData.auth_id = authUser.id;
           }
-          console.log('✅ Usuário encontrado por username:', userData.username);
         }
       } catch(e) {
         isNew = true;
@@ -5868,7 +5845,7 @@ function HelmApp() {
         // Logout button
         React.createElement("button", {
           onClick: async () => {
-            if (confirm("Sair da conta?")) {
+            if (confirm("Log out?")) {
               // Limpar apenas dados do HELM (não todo o localStorage)
               localStorage.removeItem('helmUser');
               localStorage.removeItem('helmUserKey');
@@ -5941,7 +5918,7 @@ function HelmApp() {
             style:{width:'100%', opacity: (loading || uname.trim().length < 3) ? 0.5 : 1}
           }, loading ? '⏳ Loading...' : 'Enter HELM'),
           React.createElement("p", {style:{fontSize:'0.72rem', color:'var(--text-secondary)', marginTop:'16px'}},
-            "No password needed. Your progress is saved to your username."
+            "This will be your name on the global leaderboard."
           )
         )
       )
@@ -7076,7 +7053,7 @@ function HelmApp() {
       border: `1px solid ${analysis.riskLevel === 'low' ? 'var(--success)' : analysis.riskLevel === 'medium' ? 'var(--warning)' : 'var(--danger)'}`,
       color: analysis.riskLevel === 'low' ? 'var(--success)' : analysis.riskLevel === 'medium' ? 'var(--warning)' : 'var(--danger)'
     }
-  }, analysis.riskLevel === 'low' && '✅ BAIXO RISCO', analysis.riskLevel === 'medium' && '⚡ MEDIUM RISK', analysis.riskLevel === 'high' && '🚨 ALTO RISCO', analysis.riskLevel === 'extreme' && '☠️ EXTREMO', ' ', "\xB7 ", analysis.riskScore, "/100")), /*#__PURE__*/React.createElement("div", {
+  }, analysis.riskLevel === 'low' && '✅ LOW RISK', analysis.riskLevel === 'medium' && '⚡ MEDIUM RISK', analysis.riskLevel === 'high' && '🚨 HIGH RISK', analysis.riskLevel === 'extreme' && '☠️ EXTREME', ' ', "\xB7 ", analysis.riskScore, "/100")), /*#__PURE__*/React.createElement("div", {
     className: "stat-grid",
     style: {
       marginTop: '16px'
