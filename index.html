@@ -996,10 +996,13 @@ const authService = {
     const ready = await authService.ensureClient();
     if (!ready) return { error: null };
     
-    // Limpar apenas dados do HELM (não todo o localStorage)
+    // Clear all HELM user data from localStorage
     localStorage.removeItem('helmUser');
     localStorage.removeItem('helmUserKey');
     localStorage.removeItem('helmAuthKey');
+    localStorage.removeItem('helmMissions');
+    localStorage.removeItem('helmAds');
+    localStorage.removeItem('helmStarterDone');
     
     const { error } = await supabaseClient.auth.signOut();
     if (!error) {
@@ -4545,67 +4548,82 @@ function HelmApp() {
   useEffect(() => {
     const loadOrCreateUser = async () => {
       try {
-      // 1) Tentar carregar do localStorage primeiro (cache rápido)
+      // 1) Verificar autenticação primeiro
+      const authUser = window.authService?.getUser();
+
+      // 2) Tentar carregar do localStorage (cache rápido) — MAS validar auth_id
       const stored = localStorage.getItem('helmUser');
       if (stored) {
         try {
           const userData = JSON.parse(stored);
-          userData.xp = userData.xp || 0;
-          userData.badges = userData.badges || [];
-          userData.currentStreak = userData.currentStreak || 0;
-          userData.analysisCount = userData.analysisCount || 0;
-          userData.trades = migrateTrades(userData.trades);
-          setUser(userData);
-          localStorage.setItem('helmUser', JSON.stringify(userData));
-
-          // Em background, verificar se Supabase tem dados mais frescos
-          const key = localStorage.getItem('helmUserKey') || ('helmuser_' + (userData.username||'').toLowerCase());
-          const bgAuthKey = localStorage.getItem('helmAuthKey');
           
-          // Buscar pela chave principal e authKey, pegar o mais recente
-          const fetchFresh = async () => {
-            let freshData = null;
-            // Tentar pela key principal
-            try {
-              const r = await helmStorage.get(key, true);
-              if (r && r.value) freshData = JSON.parse(r.value);
-            } catch(e) {}
-            // Tentar pela authKey se for diferente
-            if (bgAuthKey && bgAuthKey !== key) {
-              try {
-                const r2 = await helmStorage.get(bgAuthKey, true);
-                if (r2 && r2.value) {
-                  const authData = JSON.parse(r2.value);
-                  // Usar o que tiver mais trades (mais atualizado)
-                  if (!freshData || (authData.trades?.length || 0) > (freshData.trades?.length || 0)) {
-                    freshData = authData;
-                  }
-                }
-              } catch(e) {}
-            }
-            if (freshData && freshData.createdAt && 
-                (!userData.createdAt || (freshData.trades?.length || 0) >= (userData.trades?.length || 0))) {
-              freshData.xp = freshData.xp || 0;
-              freshData.badges = freshData.badges || [];
-              freshData.currentStreak = freshData.currentStreak || 0;
-              freshData.analysisCount = freshData.analysisCount || 0;
-              freshData.trades = migrateTrades(freshData.trades);
-              setUser(freshData);
-              localStorage.setItem('helmUser', JSON.stringify(freshData));
-            }
-          };
-          fetchFresh().catch(() => {});
+          // ⚠️ CRITICAL: Verify cache belongs to current auth user
+          const cachedAuthId = userData.auth_id;
+          const currentAuthId = authUser?.id;
+          
+          if (cachedAuthId && currentAuthId && cachedAuthId !== currentAuthId) {
+            // Cache belongs to a DIFFERENT user — clear it
+            localStorage.removeItem('helmUser');
+            localStorage.removeItem('helmUserKey');
+            localStorage.removeItem('helmAuthKey');
+            // Fall through to Supabase lookup below
+          } else {
+            userData.xp = userData.xp || 0;
+            userData.badges = userData.badges || [];
+            userData.currentStreak = userData.currentStreak || 0;
+            userData.analysisCount = userData.analysisCount || 0;
+            userData.trades = migrateTrades(userData.trades);
+            setUser(userData);
+            localStorage.setItem('helmUser', JSON.stringify(userData));
 
-          setUserLoading(false);
-          return;
+            // Em background, verificar se Supabase tem dados mais frescos
+            const key = localStorage.getItem('helmUserKey') || ('helmuser_' + (userData.username||'').toLowerCase());
+            const bgAuthKey = localStorage.getItem('helmAuthKey');
+            
+            // Buscar pela chave principal e authKey, pegar o mais recente
+            const fetchFresh = async () => {
+              let freshData = null;
+              // Tentar pela key principal
+              try {
+                const r = await helmStorage.get(key, true);
+                if (r && r.value) freshData = JSON.parse(r.value);
+              } catch(e) {}
+              // Tentar pela authKey se for diferente
+              if (bgAuthKey && bgAuthKey !== key) {
+                try {
+                  const r2 = await helmStorage.get(bgAuthKey, true);
+                  if (r2 && r2.value) {
+                    const authData = JSON.parse(r2.value);
+                    // Usar o que tiver mais trades (mais atualizado)
+                    if (!freshData || (authData.trades?.length || 0) > (freshData.trades?.length || 0)) {
+                      freshData = authData;
+                    }
+                  }
+                } catch(e) {}
+              }
+              if (freshData && freshData.createdAt && 
+                  (!userData.createdAt || (freshData.trades?.length || 0) >= (userData.trades?.length || 0))) {
+                freshData.xp = freshData.xp || 0;
+                freshData.badges = freshData.badges || [];
+                freshData.currentStreak = freshData.currentStreak || 0;
+                freshData.analysisCount = freshData.analysisCount || 0;
+                freshData.trades = migrateTrades(freshData.trades);
+                setUser(freshData);
+                localStorage.setItem('helmUser', JSON.stringify(freshData));
+              }
+            };
+            fetchFresh().catch(() => {});
+
+            setUserLoading(false);
+            return;
+          }
         } catch (e) {
-          console.warn('⚠️ helmUser corrompido no localStorage, ignorando...');
+          console.warn('helmUser corrupted in localStorage, ignoring...');
           localStorage.removeItem('helmUser');
         }
       }
 
-      // 2) Se não tem cache, verificar se está autenticado
-      const authUser = window.authService?.getUser();
+      // 3) Se não tem cache válido, verificar se está autenticado
       if (!authUser) {
         setUserLoading(false);
         return;
@@ -5971,10 +5989,12 @@ function HelmApp() {
         React.createElement("button", {
           onClick: async () => {
             if (confirm("Log out?")) {
-              // Limpar apenas dados do HELM (não todo o localStorage)
               localStorage.removeItem('helmUser');
               localStorage.removeItem('helmUserKey');
               localStorage.removeItem('helmAuthKey');
+              localStorage.removeItem('helmMissions');
+              localStorage.removeItem('helmAds');
+              localStorage.removeItem('helmStarterDone');
               await window.authService.signOut();
               // Recarregar página para limpar estado
               window.location.reload();
@@ -6274,6 +6294,9 @@ function HelmApp() {
         localStorage.removeItem('helmUser');
         localStorage.removeItem('helmUserKey');
         localStorage.removeItem('helmAuthKey');
+        localStorage.removeItem('helmMissions');
+        localStorage.removeItem('helmAds');
+        localStorage.removeItem('helmStarterDone');
         await window.authService.signOut();
         window.location.reload();
       }
