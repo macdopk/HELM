@@ -397,78 +397,85 @@
            ══════════════════════════════════════════ */
         @media (max-width: 768px) {
           /* ── HEADER: Compact ──────────────────────────── */
-          /* ── HEADER: Optimized layout ────────────────── */
           .header { 
             padding: 6px 10px !important; 
             margin-bottom: 8px !important;
             padding-top: max(6px, env(safe-area-inset-top)) !important;
           }
           
-          /* Header grid: Logo | Balance Cards | Buttons */
+          /* Header flex layout */
           .header > div {
-            display: grid !important;
-            grid-template-columns: auto 1fr auto !important;
+            display: flex !important;
             gap: 6px !important;
             align-items: center !important;
             width: 100% !important;
+            flex-wrap: nowrap !important;
           }
           
-          /* Logo + Level (left) */
+          /* Logo area (left) - compact */
           .header > div > div:first-child {
             display: flex !important;
             align-items: center !important;
             gap: 4px !important;
             flex-shrink: 0 !important;
+            min-width: 0 !important;
           }
           
           .header .logo { 
-            font-size: 1rem !important;
+            font-size: 0.9rem !important;
             display: flex !important;
             align-items: center !important;
-            gap: 4px !important;
+            gap: 3px !important;
           }
           .header .logo img { 
-            width: 20px !important; 
-            height: 20px !important; 
+            width: 18px !important; 
+            height: 18px !important; 
           }
           
-          /* Hide tagline */
+          /* Hide tagline on mobile */
           .header .logo + div {
             display: none !important;
           }
           
-          /* Balance cards (middle) - make them smaller */
+          /* Hide level badge on mobile */
+          .level-badge {
+            display: none !important;
+          }
+          
+          /* Balance cards (middle) */
           .header > div > div:nth-child(2) {
             display: flex !important;
             gap: 4px !important;
             justify-content: center !important;
             overflow: hidden !important;
+            flex: 1 !important;
+            min-width: 0 !important;
           }
           
           .header > div > div:nth-child(2) > div {
-            padding: 4px 6px !important;
+            padding: 3px 6px !important;
             font-size: 0.7rem !important;
             min-width: 0 !important;
             flex: 1 !important;
-            max-width: 70px !important;
+            max-width: 72px !important;
           }
           
           .header > div > div:nth-child(2) > div > div:first-child {
-            font-size: 0.65rem !important;
-            margin-bottom: 1px !important;
+            font-size: 0.6rem !important;
+            margin-bottom: 0 !important;
           }
           
           .header > div > div:nth-child(2) > div > div:nth-child(2) {
-            font-size: 0.85rem !important;
+            font-size: 0.8rem !important;
             font-weight: bold !important;
           }
           
           .header > div > div:nth-child(2) > div > div:last-child {
-            font-size: 0.65rem !important;
-            margin-top: 1px !important;
+            font-size: 0.6rem !important;
+            margin-top: 0 !important;
           }
           
-          /* Missions + Settings (right) - icon only */
+          /* Right buttons area */
           .header > div > div:last-child {
             display: flex !important;
             gap: 4px !important;
@@ -476,47 +483,27 @@
             flex-shrink: 0 !important;
           }
           
-          /* Missions button - icon only on mobile */
+          /* All header buttons compact */
           .header button {
-            padding: 6px !important;
+            padding: 5px 8px !important;
             font-size: 0.8rem !important;
-            min-height: 32px !important;
-            min-width: 32px !important;
+            min-height: 30px !important;
+            min-width: 30px !important;
+          }
+          
+          /* Missions button - icon-only class applied via JS */
+          .missions-btn-mobile {
+            width: 34px !important;
+            padding: 5px !important;
+            font-size: 1.1rem !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
           }
           
-          /* Hide text in Missions button, keep only icon */
-          .header button:first-of-type {
-            font-size: 1.2rem !important;
-          }
-          .header button:first-of-type::after {
-            content: '' !important;
-          }
-          
-          
-          
-          /* Hide Missions text on mobile, show only icon */
-          .header button:has([data-missions]),
-          .header button:contains("Missions"),
-          .header button:first-of-type:not(:last-of-type) {
-            width: 36px !important;
-            overflow: hidden !important;
-            text-indent: -9999px !important;
-            position: relative !important;
-          }
-          
-          /* Show only the emoji/icon */
-          .header button:first-of-type:not(:last-of-type)::before {
-            content: "📋" !important;
-            position: absolute !important;
-            left: 50% !important;
-            top: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            text-indent: 0 !important;
-            font-size: 1.2rem !important;
-          }
+          /* Show/hide helpers */
+          .hide-mobile { display: none !important; }
+          .show-mobile { display: inline !important; }
 
           /* Settings button */
           .header button:last-child {
@@ -594,6 +581,32 @@
           button, .tab, .clickable {
             user-select: none;
             -webkit-user-select: none;
+          }
+          
+          /* ── PORTFOLIO: Action buttons grid ────────────── */
+          .pos-actions {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 6px !important;
+          }
+          .pos-abtn {
+            padding: 10px 6px !important;
+            font-size: 0.72rem !important;
+            min-height: 38px !important;
+          }
+          /* Make last button (Details) span full width if odd */
+          .pos-actions .pos-abtn:last-child:nth-child(odd) {
+            grid-column: 1 / -1;
+          }
+          
+          /* Quick buttons row */
+          .pos-quick {
+            gap: 4px !important;
+          }
+          .pos-qbtn {
+            padding: 7px 8px !important;
+            font-size: 0.7rem !important;
+            min-height: 34px !important;
           }
         }
 
@@ -741,6 +754,89 @@
     }
     .pos-abtn:hover { background: var(--bg-hover); border-color: rgba(148,163,184,0.25); color: var(--text-primary); transform: translateY(-1px); }
     .pos-abtn.abtn-accent { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.25); color: var(--accent); }
+
+    /* Responsive show/hide helpers (desktop defaults) */
+    .hide-mobile { display: inline; }
+    .show-mobile { display: none; }
+
+    /* ── GLOSSARY ────────────────────────── */
+    .gloss-search {
+      width: 100%; padding: 12px 14px 12px 38px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--bg-primary);
+      color: var(--text-primary); font-size: 0.9rem; font-family: inherit;
+      box-sizing: border-box; outline: none;
+    }
+    .gloss-search:focus { border-color: var(--accent); }
+    .gloss-search-wrap {
+      position: relative; margin-bottom: 16px;
+    }
+    .gloss-search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      font-size: 1rem; pointer-events: none;
+    }
+    .gloss-cats {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .gloss-cat {
+      padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+      border: 1px solid var(--border); background: var(--bg-card);
+      color: var(--text-secondary); cursor: pointer; transition: all 0.2s;
+      font-family: inherit;
+    }
+    .gloss-cat.active {
+      background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4);
+      color: var(--accent);
+    }
+    .gloss-item {
+      padding: 12px 14px; border-radius: 10px; margin-bottom: 6px;
+      border: 1px solid var(--border); background: var(--bg-card);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .gloss-item:hover { border-color: rgba(148,163,184,0.3); }
+    .gloss-item.open { border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.04); }
+    .gloss-term {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .gloss-word { font-weight: 700; font-size: 0.88rem; }
+    .gloss-tag {
+      font-size: 0.65rem; padding: 2px 7px; border-radius: 4px;
+      background: rgba(139,92,246,0.1); color: #a78bfa; font-weight: 600;
+    }
+    .gloss-def {
+      margin-top: 8px; font-size: 0.82rem; color: var(--text-secondary);
+      line-height: 1.55; display: none;
+    }
+    .gloss-item.open .gloss-def { display: block; }
+    .gloss-example {
+      margin-top: 6px; padding: 8px 10px; border-radius: 6px;
+      background: var(--bg-primary); font-size: 0.78rem; font-style: italic;
+      color: var(--text-secondary); border-left: 2px solid var(--accent);
+    }
+
+    /* ── TOOLTIP (contextual on flags) ───── */
+    .flag-term {
+      text-decoration: underline dotted; text-underline-offset: 2px;
+      cursor: help; transition: color 0.2s;
+    }
+    .flag-term:hover { color: var(--accent); }
+    .term-tooltip {
+      position: fixed; z-index: 2500; max-width: 300px;
+      background: var(--bg-card); border: 1px solid var(--accent);
+      border-radius: 12px; padding: 14px 16px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      animation: sfSlideUp 0.2s ease;
+    }
+    .term-tooltip .tt-word {
+      font-weight: 800; font-size: 0.9rem; margin-bottom: 4px;
+    }
+    .term-tooltip .tt-def {
+      font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;
+    }
+    .term-tooltip .tt-close {
+      position: absolute; top: 8px; right: 10px; background: none; border: none;
+      color: var(--text-secondary); cursor: pointer; font-size: 0.9rem; padding: 0;
+      min-height: auto;
+    }
 
     .partial-badge-new {
       display: inline-flex; align-items: center; gap: 4px;
@@ -4623,11 +4719,17 @@ function HelmApp() {
   // StarterFlow: auto-advance based on state changes
   useEffect(() => {
     if (starterFlow === 1) {
-      // Step 1: switch to analysis tab and pre-fill token
+      // Pre-fill token but don't auto-analyze
       setActiveTab('analysis');
       setTokenAddress(STARTER_TOKEN);
     }
   }, [starterFlow]);
+
+  // StarterFlow: dedicated analyze function (bypasses stale state)
+  const starterAnalyze = () => {
+    setActiveTab('analysis');
+    analyzeToken(STARTER_TOKEN);
+  };
 
   // StarterFlow: detect analysis loaded → advance to step 2
   useEffect(() => {
@@ -4643,7 +4745,133 @@ function HelmApp() {
       setTimeout(() => setStarterFlow(4), 600);
     }
   }, [user?.trades?.length, starterFlow]);
-  const [userLoading, setUserLoading] = useState(true); // ⬅️ loading enquanto busca usuário
+  const [userLoading, setUserLoading] = useState(true);
+  const [glossTip, setGlossTip] = useState(null); // {term, def, x, y}
+  const [glossSearch, setGlossSearch] = useState('');
+  const [glossCat, setGlossCat] = useState('all');
+
+  // ── GLOSSARY DATA ──────────────────────
+  const GLOSSARY = [
+    // Trading Basics
+    {t:'MC (Market Cap)',d:'Total value of all tokens. MC = price × total supply. Low MC ($10k-$100k) = more room to grow but higher risk. High MC ($10M+) = safer but less upside.',ex:'"This token has a $50k MC — perfect entry zone."',cat:'trading'},
+    {t:'Liquidity',d:'Real money in the trading pool. If liquidity is $5k and you buy $2k worth, price spikes. On sell, it crashes. Low liq = you can\'t exit without destroying the price.',ex:'"Liq is only $8k — if I ape $1k, slippage will eat me alive."',cat:'trading'},
+    {t:'Slippage',d:'Difference between the price you see and what you actually pay. Low volume tokens have high slippage. You enter already losing money. HELM simulates this.',ex:'"2% slippage on a $0.50 SOL buy means I paid $0.51."',cat:'trading'},
+    {t:'Volume',d:'How much money flowed through the token in 24h. High volume = active interest. But fake volume (wash trading) exists — check the vol/MC ratio.',ex:'"$500k volume on a $50k MC token? That\'s 10x — probably wash trading."',cat:'trading'},
+    {t:'MC/Liq Ratio',d:'Market Cap divided by Liquidity. When MC is $1M but liquidity is $5k, one whale selling $5k can crash the price to zero. Ratio >1000× = extremely dangerous.',ex:'"MC/Liq ratio of 2000x — one sell order and this thing is dead."',cat:'trading'},
+    {t:'Buy/Sell Ratio',d:'Compares buy orders vs sell orders in 24h. More buys = demand. But a ratio of 10:1 or higher is suspicious — could be bots or wash trading.',ex:'"500 buys and 20 sells? Either everyone loves it or bots are farming."',cat:'trading'},
+    {t:'PnL',d:'Profit and Loss — your result on a trade. Green PnL = you made money. Red PnL = you lost. Track your PnL religiously.',ex:'"My PnL on $WIF: +2.3 SOL. Best trade this week."',cat:'trading'},
+    {t:'DCA (Dollar Cost Average)',d:'Buying more when price drops to lower your average entry price. Smart DCA = small additions at key support levels. Dumb DCA = throwing money at a dead token.',ex:'"Token dipped 40% but fundamentals unchanged — DCA\'d 0.2 SOL."',cat:'trading'},
+    {t:'Entry / Exit',d:'Entry = price or moment you bought. Exit = price or moment you sold. Good traders plan both BEFORE clicking buy.',ex:'"My entry was $0.002 and I\'m targeting exit at $0.01 — that\'s 5x."',cat:'trading'},
+    {t:'Position Size',d:'How much of your balance you put in one trade. >10% on a memecoin = reckless. 2-5% = smart. Pros risk 1-2% max per trade.',ex:'"I only ape 0.1 SOL per trade — that\'s 2% of my bag."',cat:'trading'},
+    {t:'Take Profit / Partial Sell',d:'Selling a portion of your position when price rises to lock in gains. Don\'t wait for 100x — take profits at 2x, 5x. Let a small moonbag ride.',ex:'"Sold 50% at 3x, another 25% at 5x. Riding 25% moonbag."',cat:'trading'},
+    {t:'Stop Loss',d:'Pre-decided price where you accept the loss and sell. Memecoins don\'t have auto stop-loss. It\'s YOUR discipline. -30% to -50% is common threshold.',ex:'"My rule: if it drops 40% from my entry with declining volume, I\'m out."',cat:'trading'},
+
+    // On-Chain
+    {t:'Holders',d:'Number of unique wallets holding the token. 50 holders = 3 people control everything. 500+ with good distribution = healthier. But bots can fake holder counts.',ex:'"Only 80 holders — this is basically a group chat token."',cat:'onchain'},
+    {t:'Top Holder %',d:'Percentage of total supply held by the biggest wallet. If one wallet holds 10%+, they can crash the price in one sell. Safe threshold: <2.5%.',ex:'"Top holder has 15% — that\'s a ticking time bomb."',cat:'onchain'},
+    {t:'Avg Bag',d:'Average value held per wallet (MC / holders). Many holders with $2 bags = bots. Few holders with $50k bags = whales. Healthy: $50-$500 avg.',ex:'"5000 holders but avg bag is $3 — those are all airdrop bots."',cat:'onchain'},
+    {t:'Snipers',d:'Bots that buy in the very first second of a token launch. They get the cheapest price and dump on real buyers later. If snipers hold 20%+ supply, you already lost.',ex:'"4 sniper wallets hold 25% of supply — this was dead on arrival."',cat:'onchain'},
+    {t:'Bonding Curve',d:'Pump.fun mechanism: price rises automatically as more people buy. Token "graduates" to Raydium after hitting $90k MC. Early buyers get the best price by design.',ex:'"Still on bonding curve at $40k MC — if it graduates, early buyers 2x minimum."',cat:'onchain'},
+    {t:'Wash Trading',d:'Fake volume created by bots trading with themselves to make a token look active. Check vol/MC ratio — if volume is 5x+ the market cap, it\'s likely fake.',ex:'"$2M volume on a $100k MC token? Nobody real is trading that much."',cat:'onchain'},
+    {t:'Rug Pull',d:'Developer abandons project and sells all their tokens or removes liquidity. Your token goes to $0 instantly. Classic rug: liquidity not locked + anonymous dev.',ex:'"Dev removed liquidity at 3am — classic rug. Token went from $0.01 to $0."',cat:'onchain'},
+    {t:'Soft Rug',d:'Dev doesn\'t disappear but slowly stops working. Updates stop, socials go quiet, price bleeds out over weeks instead of crashing instantly.',ex:'"Last tweet was 2 weeks ago, TG admin hasn\'t posted in days — soft rug in progress."',cat:'onchain'},
+
+    // CT Culture
+    {t:'APE',d:'Buying aggressively, usually without much analysis. "I aped" = I bought fast. Can be smart (early conviction play) or dumb (FOMO buy at the top).',ex:'"I saw the narrative forming and aped 1 SOL before CT caught on."',cat:'culture'},
+    {t:'FOMO',d:'Fear Of Missing Out. You see a token at +500% and buy the top because "it might go higher." FOMO is the #1 reason degens lose money.',ex:'"Bought at $0.10 because of FOMO. It went to $0.02 the next day."',cat:'culture'},
+    {t:'Jeet',d:'Someone who sells at the first sign of profit, usually for minimal gains. Opposite of diamond hands. In memecoin culture, jeeting at 2x is sometimes the smart play.',ex:'"He jeeted his entire bag at 1.5x — missed the 20x pump."',cat:'culture'},
+    {t:'Diamond Hands',d:'Holding through massive volatility. In stocks this is heroic. In memecoins it\'s often just holding a bag to zero. Know when diamond hands becomes stupidity.',ex:'"Diamond handed through a -60% dip and it came back to 10x. Lucky."',cat:'culture'},
+    {t:'Paper Hands',d:'Selling at the first sign of a dip. Sometimes smart (cutting losses early), sometimes you sell the bottom right before a pump.',ex:'"Paper handed at -20% and it pumped 5x the next hour. Classic."',cat:'culture'},
+    {t:'Moonbag',d:'A small position you keep after taking profits, just in case the token "goes to the moon." Usually 10-25% of your original position. Free lottery ticket.',ex:'"Took 75% profits at 5x. Riding the moonbag — if it goes to 50x, I\'m rich."',cat:'culture'},
+    {t:'Degen',d:'A trader who takes extremely high risks knowingly. Not an insult in crypto — it\'s a lifestyle. Smart degens manage risk. Dumb degens go broke.',ex:'"Full degen mode: aped 50% of my bag into a 2-hour-old token."',cat:'culture'},
+    {t:'CT (Crypto Twitter)',d:'The X/Twitter crypto community. Where narratives are born, alpha is shared (and faked), and fortunes are made and lost. Your main source of memecoin intel.',ex:'"CT was all over this AI meta before it pumped 20x."',cat:'culture'},
+    {t:'Alpha',d:'Valuable information that gives you an edge before others have it. Real alpha is rare. Most "alpha" on CT is someone shilling their bags.',ex:'"Got alpha from a dev chat — they\'re listing on a major CEX next week."',cat:'culture'},
+    {t:'NFA',d:'Not Financial Advice. Everyone says it, nobody means it. Legal disclaimer that people add after telling you exactly what to buy.',ex:'"You should definitely ape this. NFA." (It is absolutely financial advice.)',cat:'culture'},
+    {t:'DYOR',d:'Do Your Own Research. The most important rule that nobody follows. Check the chart, holders, socials, dev wallet — before you ape.',ex:'"Someone called $XYZ on CT. DYOR before aping — check holders on BubbleMaps."',cat:'culture'},
+    {t:'Bag',d:'Your position in a token. "Heavy bag" = losing money on a big position. "Light bag" = small position. "Holding bags" = stuck with tokens nobody wants.',ex:'"My $BONK bag is up 300% — should I take profits?"',cat:'culture'},
+    {t:'KOL',d:'Key Opinion Leader — crypto influencer. When a KOL calls a token, it pumps (because followers buy). Then it dumps (because the KOL already bought cheaper).',ex:'"3 big KOLs shilled this token today — price already 5x from their entry."',cat:'culture'},
+    {t:'Shill',d:'Promoting a token publicly, usually because you already hold it. "He\'s shilling his bags." Not always bad — but always question the motivation.',ex:'"He\'s been shilling $ABC nonstop. Check if his wallet bought it yesterday."',cat:'culture'},
+    {t:'Call',d:'A public recommendation to buy a specific token. Good calls are early and well-researched. Bad calls are late and paid for. Track KOL win rates.',ex:'"He called $WIF at $0.001. That turned into a 1000x."',cat:'culture'},
+    {t:'Narrative / Meta',d:'The "story" driving a group of tokens. AI tokens, dog coins, political coins, celebrity tokens. Token without a narrative dies. Narratives rotate fast.',ex:'"Dog meta is dead, AI meta is pumping. Rotate or get left behind."',cat:'culture'},
+    {t:'Rotation',d:'When money moves from one narrative to another. Dog coins pump → profits flow into AI coins → AI pumps. Spotting rotation early = alpha.',ex:'"Money rotating from memes to AI agents. Follow the flow."',cat:'culture'},
+    {t:'Pump / Dump',d:'Pump = sharp price rise. Dump = sharp price fall. Often coordinated: insiders pump a token with hype, then dump their bags on retail buyers.',ex:'"Classic pump and dump — up 500% in 2 hours, then -90% in 10 minutes."',cat:'culture'},
+
+    // Risk Management
+    {t:'Risk/Reward',d:'How much you risk vs potential gain. Risking 1 SOL to make 0.5 SOL = bad trade. Risking 0.1 SOL to potentially make 1 SOL = good setup.',ex:'"Entry at $50k MC with potential to 500k MC = 10x R/R. Worth the risk."',cat:'risk'},
+    {t:'Survival Mode',d:'When your balance is low and you need to be extremely careful. Small position sizes, high-conviction trades only. The goal is to survive, not to get rich quick.',ex:'"Down to 0.3 SOL — survival mode. Only aping tokens with locked liq and strong narrative."',cat:'risk'},
+    {t:'Overexposure',d:'Having too much of your capital in one token or one narrative. If that narrative dies, you lose everything. Diversify across 3-5 tokens minimum.',ex:'"80% of my bag in one token. If it dumps, I\'m done."',cat:'risk'},
+  ];
+
+  // Map terms for quick tooltip lookup
+  const GLOSS_MAP = {};
+  GLOSSARY.forEach(g => {
+    const key = g.t.split('(')[0].trim().toLowerCase();
+    GLOSS_MAP[key] = g;
+    // Also map abbreviations
+    const abbr = g.t.match(/\(([^)]+)\)/);
+    if (abbr) GLOSS_MAP[abbr[1].toLowerCase()] = g;
+  });
+
+  // Terms to detect in flag text for tooltips
+  const TOOLTIP_TERMS = [
+    ['MC','mc (market cap)'],['market cap','mc (market cap)'],['liquidity','liquidity'],['slippage','slippage'],
+    ['volume','volume'],['holders','holders'],['holder','holders'],['avg bag','avg bag'],
+    ['wash trading','wash trading'],['sniper','snipers'],['buy/sell','buy/sell ratio'],
+    ['bonding curve','bonding curve'],['rug','rug pull'],['MC/Liq','mc/liq ratio'],
+    ['volatility','mc (market cap)'],['DEX','mc (market cap)'],['boost','mc (market cap)'],
+  ];
+
+  // Render flag text with tappable terms
+  const renderFlagWithTips = (text) => {
+    if (!text || typeof text !== 'string') return text;
+    const parts = [];
+    let remaining = text;
+    let key = 0;
+    
+    // Simple approach: scan for known terms
+    const termsInText = [];
+    TOOLTIP_TERMS.forEach(([pattern, glossKey]) => {
+      const idx = remaining.toLowerCase().indexOf(pattern.toLowerCase());
+      if (idx !== -1) {
+        termsInText.push({ idx, len: pattern.length, glossKey });
+      }
+    });
+    
+    // Sort by position, take first 2 max
+    termsInText.sort((a,b) => a.idx - b.idx);
+    const used = termsInText.slice(0, 2);
+    
+    if (used.length === 0) return text;
+    
+    let pos = 0;
+    used.forEach(({idx, len, glossKey}) => {
+      if (idx < pos) return;
+      if (idx > pos) parts.push(remaining.substring(pos, idx));
+      const matched = remaining.substring(idx, idx + len);
+      const entry = GLOSS_MAP[glossKey.toLowerCase()];
+      if (entry) {
+        parts.push(React.createElement("span", {
+          key: key++,
+          className: "flag-term",
+          onClick: (e) => {
+            e.stopPropagation();
+            const rect = e.target.getBoundingClientRect();
+            setGlossTip({
+              term: entry.t,
+              def: entry.d,
+              x: Math.min(rect.left, window.innerWidth - 310),
+              y: rect.bottom + 8
+            });
+          }
+        }, matched));
+      } else {
+        parts.push(matched);
+      }
+      pos = idx + len;
+    });
+    if (pos < remaining.length) parts.push(remaining.substring(pos));
+    return React.createElement(React.Fragment, null, ...parts);
+  }; // ⬅️ loading enquanto busca usuário
   
   // Helper: migrar trades antigos para nova estrutura
   const migrateTrades = (trades) => {
@@ -5539,19 +5767,21 @@ function HelmApp() {
     showToast(isNew ? 'Welcome to HELM! 🎉' : 'Welcome back, ' + username + '! 👋', 'success');
     if (isNew && !localStorage.getItem('helmStarterDone')) setTimeout(() => setStarterFlow(0), 800);
   };
-  const analyzeToken = async () => {
-    if (!tokenAddress) {
+  const analyzeToken = async (overrideAddress) => {
+    const addr = overrideAddress || tokenAddress;
+    if (!addr) {
       showToast('Please enter a token address', 'warning');
       return;
     }
+    if (overrideAddress) setTokenAddress(overrideAddress);
     setLoading(true);
     try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`);
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`);
       const data = await res.json();
       if (data.pairs && data.pairs.length > 0) {
         const pair = data.pairs[0];
         const tokenData = {
-          address: tokenAddress,
+          address: addr,
           name: pair.baseToken?.name || 'Unknown',
           symbol: pair.baseToken?.symbol || '???',
           price: parseFloat(pair.priceUsd) || 0,
@@ -6296,7 +6526,7 @@ function HelmApp() {
       cursor: 'pointer',
       whiteSpace: 'nowrap'
     }
-  }, "\uD83D\uDCCB Missions"), /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("span", { className: "hide-mobile" }, "\uD83D\uDCCB Missions"), React.createElement("span", { className: "show-mobile" }, "\uD83D\uDCCB")), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'relative'
     }
@@ -7423,7 +7653,7 @@ function HelmApp() {
       marginBottom: '5px',
       lineHeight: 1.4
     }
-  }, flag))), analysis.greenFlags?.length > 0 && /*#__PURE__*/React.createElement("div", {
+  }, renderFlagWithTips(flag)))), analysis.greenFlags?.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       background: 'rgba(16,185,129,0.08)',
       padding: '14px',
@@ -7444,7 +7674,7 @@ function HelmApp() {
       marginBottom: '5px',
       lineHeight: 1.4
     }
-  }, flag))), /*#__PURE__*/React.createElement("div", {
+  }, renderFlagWithTips(flag)))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: '18px',
       padding: '14px',
@@ -8165,6 +8395,77 @@ React.createElement("div",{key:"HTX / OKX fd",className:"u-card-inner"},
     )
       )
     )
+  ,
+
+  /* ── DEGEN GLOSSARY ────────────────────── */
+  React.createElement("div", { style: { marginTop: '28px' } },
+    React.createElement("div", { style: { textAlign: 'center', marginBottom: '20px' } },
+      React.createElement("div", { style: { fontSize: '2.2rem', marginBottom: '6px' } }, "📖"),
+      React.createElement("h2", { style: { marginBottom: '4px' } }, "Degen Glossary"),
+      React.createElement("p", { style: { color: 'var(--text-secondary)', fontSize: '0.85rem' } }, "Every term you'll see on CT, in HELM, and in Telegram groups. Tap any term to learn.")
+    ),
+    /* Search */
+    React.createElement("div", { className: "gloss-search-wrap" },
+      React.createElement("span", { className: "gloss-search-icon" }, "🔍"),
+      React.createElement("input", {
+        className: "gloss-search",
+        type: "text",
+        placeholder: "Search terms... (e.g. rug, FOMO, liquidity)",
+        value: glossSearch,
+        onChange: e => setGlossSearch(e.target.value)
+      })
+    ),
+    /* Category filters */
+    React.createElement("div", { className: "gloss-cats" },
+      [['all','📚 All'],['trading','📊 Trading'],['onchain','⛓️ On-Chain'],['culture','🐸 CT Culture'],['risk','🛡️ Risk']].map(([id, label]) =>
+        React.createElement("button", {
+          key: id,
+          className: `gloss-cat ${glossCat === id ? 'active' : ''}`,
+          onClick: () => setGlossCat(id)
+        }, label)
+      )
+    ),
+    /* Term count */
+    React.createElement("div", { style: { fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '10px' } },
+      (() => {
+        const filtered = GLOSSARY.filter(g => 
+          (glossCat === 'all' || g.cat === glossCat) &&
+          (glossSearch === '' || g.t.toLowerCase().includes(glossSearch.toLowerCase()) || g.d.toLowerCase().includes(glossSearch.toLowerCase()))
+        );
+        return filtered.length + ' term' + (filtered.length !== 1 ? 's' : '');
+      })()
+    ),
+    /* Terms list */
+    GLOSSARY.filter(g => 
+      (glossCat === 'all' || g.cat === glossCat) &&
+      (glossSearch === '' || g.t.toLowerCase().includes(glossSearch.toLowerCase()) || g.d.toLowerCase().includes(glossSearch.toLowerCase()))
+    ).map((g, i) =>
+      React.createElement("div", {
+        key: g.t,
+        className: `gloss-item ${glossTip && glossTip.term === g.t ? 'open' : ''}`,
+        onClick: () => setGlossTip(glossTip && glossTip.term === g.t ? null : { term: g.t, def: g.d, inline: true })
+      },
+        React.createElement("div", { className: "gloss-term" },
+          React.createElement("span", { className: "gloss-word" }, g.t),
+          React.createElement("span", { className: "gloss-tag" },
+            g.cat === 'trading' ? '📊' : g.cat === 'onchain' ? '⛓️' : g.cat === 'culture' ? '🐸' : '🛡️'
+          )
+        ),
+        React.createElement("div", { className: "gloss-def" },
+          React.createElement("div", null, g.d),
+          g.ex && React.createElement("div", { className: "gloss-example" }, g.ex)
+        )
+      )
+    ),
+    /* No results */
+    GLOSSARY.filter(g => 
+      (glossCat === 'all' || g.cat === glossCat) &&
+      (glossSearch === '' || g.t.toLowerCase().includes(glossSearch.toLowerCase()) || g.d.toLowerCase().includes(glossSearch.toLowerCase()))
+    ).length === 0 && React.createElement("div", { style: { textAlign: 'center', padding: '30px', color: 'var(--text-secondary)' } },
+      "No terms found. Try a different search."
+    )
+  )
+
   ), toast && /*#__PURE__*/React.createElement(Toast, {
     message: toast.message,
     type: toast.type,
@@ -8184,6 +8485,21 @@ React.createElement("div",{key:"HTX / OKX fd",className:"u-card-inner"},
     onNext: () => setTutorialStep(s => s >= 7 ? -1 : s + 1),
     onSkip: () => setTutorialStep(-1)
   }),
+  /* ── GLOSSARY TOOLTIP (floating — from flag clicks only) ── */
+  glossTip && !glossTip.inline && React.createElement(React.Fragment, null,
+    React.createElement("div", {
+      style: { position: 'fixed', inset: 0, zIndex: 2499 },
+      onClick: () => setGlossTip(null)
+    }),
+    React.createElement("div", {
+      className: "term-tooltip",
+      style: { left: glossTip.x + 'px', top: Math.min(glossTip.y || 200, window.innerHeight - 150) + 'px' }
+    },
+      React.createElement("button", { className: "tt-close", onClick: () => setGlossTip(null) }, "✕"),
+      React.createElement("div", { className: "tt-word" }, glossTip.term),
+      React.createElement("div", { className: "tt-def" }, glossTip.def)
+    )
+  ),
   /* ── STARTER FLOW ──────────────────── */
   starterFlow >= 0 && (() => {
     const skipAll = () => { setStarterFlow(-1); localStorage.setItem('helmStarterDone', '1'); };
@@ -8226,9 +8542,9 @@ React.createElement("div",{key:"HTX / OKX fd",className:"u-card-inner"},
 
     // Step 1: Analyze prompt (token is pre-filled)
     if (starterFlow === 1 && !analysis) {
-      return React.createElement("div", { className: "sf-overlay", style: { alignItems: 'flex-start', paddingTop: '160px', pointerEvents: 'none' } },
-        React.createElement("div", { className: "sf-backdrop", style: { background: 'rgba(0,0,0,0.5)', pointerEvents: 'none' } }),
-        React.createElement("div", { className: "sf-card", style: { maxWidth: '380px', pointerEvents: 'auto' } },
+      return React.createElement("div", { className: "sf-overlay" },
+        React.createElement("div", { className: "sf-backdrop" }),
+        React.createElement("div", { className: "sf-card", style: { maxWidth: '380px' } },
           dots(1, 4),
           React.createElement("div", { className: "sf-icon", style: { fontSize: '2rem' } }, "🔍"),
           React.createElement("div", { className: "sf-title", style: { fontSize: '1.1rem' } }, "Your First Analysis"),
@@ -8236,9 +8552,14 @@ React.createElement("div",{key:"HTX / OKX fd",className:"u-card-inner"},
             "I've loaded ", React.createElement("span", { className: "sf-token-pill" }, "🚀 PUMP"),
             " for you — the native token of pump.fun, Solana's biggest memecoin launchpad."
           ),
-          React.createElement("div", { className: "sf-desc", style: { fontWeight: '600', color: 'var(--text-primary)' } },
-            "👆 Hit the ", React.createElement("span", { style: { color: 'var(--success)' } }, "🔍 Analyze"), " button above to scan this token."
+          React.createElement("div", { className: "sf-desc", style: { fontSize: '0.8rem' } },
+            "HELM will fetch live data from DexScreener, analyze red/green flags, holders, volume, and more."
           ),
+          React.createElement("button", {
+            className: "sf-btn sf-btn-primary",
+            disabled: loading,
+            onClick: starterAnalyze
+          }, loading ? "⏳ Analyzing..." : "🔍 Analyze PUMP"),
           React.createElement("button", {
             className: "sf-btn-skip",
             onClick: skipAll
