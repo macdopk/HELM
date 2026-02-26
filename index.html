@@ -919,10 +919,16 @@ window.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('helm_auth_initialized', 'true');
     }
     
-    // Configurar listener de mudanças de auth AQUI
+    // Configurar listener de mudanças de auth
     supabaseClient.auth.onAuthStateChange((event, session) => {
       currentUser = session?.user || null;
       authService.notifyListeners();
+      
+      // Handle password recovery redirect
+      if (event === 'PASSWORD_RECOVERY') {
+        window._helmPasswordRecovery = true;
+        window.dispatchEvent(new Event('helm-password-recovery'));
+      }
     });
     
   } catch (error) {
@@ -1012,12 +1018,22 @@ const authService = {
     return { error };
   },
 
-  // Reset password
+  // Reset password (sends email)
   async resetPassword(email) {
     const ready = await authService.ensureClient();
     if (!ready) return { error: { message: 'Authentication not ready' } };
     const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin
+    });
+    return { data, error };
+  },
+
+  // Update password (after recovery)
+  async updatePassword(newPassword) {
+    const ready = await authService.ensureClient();
+    if (!ready) return { error: { message: 'Authentication not ready' } };
+    const { data, error } = await supabaseClient.auth.updateUser({
+      password: newPassword
     });
     return { data, error };
   },
@@ -1041,25 +1057,65 @@ const authService = {
   }
 };
 function AuthScreen() {
-  const [mode, setMode] = React.useState('login'); // 'login', 'signup', or 'forgot'
+  const [mode, setMode] = React.useState('login'); // 'login', 'signup', 'forgot', 'reset_password'
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [confirmPassword, setConfirmPassword] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [message, setMessage] = React.useState(null);
+
+  // Listen for password recovery redirect from Supabase
+  React.useEffect(() => {
+    const handleRecovery = () => {
+      setMode('reset_password');
+      setMessage({ type: 'success', text: '🔑 Set your new password below.' });
+    };
+    // Check if already flagged (user clicked email link)
+    if (window._helmPasswordRecovery) {
+      handleRecovery();
+    }
+    window.addEventListener('helm-password-recovery', handleRecovery);
+    return () => window.removeEventListener('helm-password-recovery', handleRecovery);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
 
-    if (mode === 'forgot') {
+    if (mode === 'reset_password') {
+      // Setting new password after recovery
+      if (password.length < 6) {
+        setMessage({ type: 'error', text: 'Password must be at least 6 characters.' });
+        setLoading(false);
+        return;
+      }
+      if (password !== confirmPassword) {
+        setMessage({ type: 'error', text: 'Passwords do not match.' });
+        setLoading(false);
+        return;
+      }
+      const { error } = await authService.updatePassword(password);
+      if (error) {
+        setMessage({ type: 'error', text: error.message });
+      } else {
+        window._helmPasswordRecovery = false;
+        window.dispatchEvent(new Event('helm-recovery-done'));
+        setMessage({ type: 'success', text: '✅ Password updated! Redirecting to login...' });
+        setTimeout(() => {
+          setMode('login');
+          setPassword('');
+          setConfirmPassword('');
+        }, 2000);
+      }
+    } else if (mode === 'forgot') {
       const { error } = await authService.resetPassword(email);
       if (error) {
         setMessage({ type: 'error', text: error.message });
       } else {
         setMessage({ 
           type: 'success', 
-          text: '✅ Password reset link sent! Check your email.' 
+          text: '✅ Password reset link sent! Check your email (including spam folder).' 
         });
       }
     } else if (mode === 'login') {
@@ -1068,14 +1124,24 @@ function AuthScreen() {
         setMessage({ type: 'error', text: error.message });
       }
     } else {
-      const { error } = await authService.signUp(email, password);
+      // signup
+      if (password.length < 6) {
+        setMessage({ type: 'error', text: 'Password must be at least 6 characters.' });
+        setLoading(false);
+        return;
+      }
+      const { data, error } = await authService.signUp(email, password);
       if (error) {
         setMessage({ type: 'error', text: error.message });
       } else {
-        setMessage({ 
-          type: 'success', 
-          text: '✅ Account created! You can login now.' 
-        });
+        // Check if email confirmation is required
+        if (data?.user?.identities?.length === 0) {
+          setMessage({ type: 'error', text: 'This email is already registered. Try logging in.' });
+        } else if (data?.user && !data?.session) {
+          setMessage({ type: 'success', text: '✅ Check your email to confirm your account, then login.' });
+        } else {
+          setMessage({ type: 'success', text: '✅ Account created! You can login now.' });
+        }
       }
     }
     setLoading(false);
@@ -1154,6 +1220,18 @@ function AuthScreen() {
       }, message.text),
 
       // Tabs
+      mode === 'reset_password' ?
+        React.createElement('div', {
+          style: { textAlign: 'center', marginBottom: '20px' }
+        },
+          React.createElement('div', {
+            style: { fontSize: '28px', marginBottom: '8px' }
+          }, '🔑'),
+          React.createElement('h3', {
+            style: { color: 'white', margin: '0 0 4px', fontSize: '20px' }
+          }, 'Set New Password')
+        )
+      :
       mode === 'forgot' ? 
         React.createElement('button', {
           onClick: () => setMode('login'),
@@ -1211,7 +1289,7 @@ function AuthScreen() {
 
       // Form
       React.createElement('form', { onSubmit: handleSubmit },
-        React.createElement('div', { style: { marginBottom: '20px' } },
+        mode !== 'reset_password' && React.createElement('div', { style: { marginBottom: '20px' } },
           React.createElement('label', {
             style: {
               display: 'block',
@@ -1226,7 +1304,7 @@ function AuthScreen() {
             placeholder: 'your@email.com',
             value: email,
             onChange: (e) => setEmail(e.target.value),
-            required: true,
+            required: mode !== 'reset_password',
             style: {
               width: '100%',
               padding: '14px',
@@ -1240,7 +1318,7 @@ function AuthScreen() {
             }
           })
         ),
-        mode !== 'forgot' && React.createElement('div', { style: { marginBottom: '25px' } },
+        (mode !== 'forgot') && React.createElement('div', { style: { marginBottom: mode === 'reset_password' ? '15px' : '25px' } },
           React.createElement('label', {
             style: {
               display: 'block',
@@ -1249,13 +1327,43 @@ function AuthScreen() {
               fontWeight: '500',
               marginBottom: '8px'
             }
-          }, 'Password'),
+          }, mode === 'reset_password' ? 'New Password' : 'Password'),
           React.createElement('input', {
             type: 'password',
             placeholder: '••••••••',
             value: password,
             onChange: (e) => setPassword(e.target.value),
             required: mode !== 'forgot',
+            minLength: 6,
+            style: {
+              width: '100%',
+              padding: '14px',
+              borderRadius: '10px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              fontSize: '16px',
+              outline: 'none',
+              boxSizing: 'border-box'
+            }
+          })
+        ),
+        mode === 'reset_password' && React.createElement('div', { style: { marginBottom: '25px' } },
+          React.createElement('label', {
+            style: {
+              display: 'block',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontSize: '14px',
+              fontWeight: '500',
+              marginBottom: '8px'
+            }
+          }, 'Confirm Password'),
+          React.createElement('input', {
+            type: 'password',
+            placeholder: '••••••••',
+            value: confirmPassword,
+            onChange: (e) => setConfirmPassword(e.target.value),
+            required: true,
             minLength: 6,
             style: {
               width: '100%',
@@ -1306,7 +1414,7 @@ function AuthScreen() {
             cursor: loading ? 'not-allowed' : 'pointer',
             transition: 'all 0.3s'
           }
-        }, loading ? '🔄 Processing...' : mode === 'forgot' ? '📧 Send Reset Link' : mode === 'login' ? '🔓 Login' : '🚀 Create Account')
+        }, loading ? '🔄 Processing...' : mode === 'reset_password' ? '🔒 Update Password' : mode === 'forgot' ? '📧 Send Reset Link' : mode === 'login' ? '🔓 Login' : '🚀 Create Account')
       ),
 
       // Footer
@@ -1326,11 +1434,12 @@ function AuthScreen() {
 function AuthWrapper({ children }) {
   const [user, setUser] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
+  const [isRecovery, setIsRecovery] = React.useState(false);
 
   React.useEffect(() => {
     let mounted = true;
     
-    // Check initial session (SEM timeout - aguarda sempre)
+    // Check initial session
     authService.getSession()
       .then(() => {
         if (mounted) {
@@ -1340,7 +1449,6 @@ function AuthWrapper({ children }) {
       })
       .catch((error) => {
         console.error('Auth init error:', error);
-        // Mesmo com erro, mostra tela de login
         if (mounted) {
           setLoading(false);
         }
@@ -1353,9 +1461,22 @@ function AuthWrapper({ children }) {
       }
     });
 
+    // Listen for password recovery event
+    const handleRecovery = () => {
+      if (mounted) setIsRecovery(true);
+    };
+    const handleRecoveryDone = () => {
+      if (mounted) setIsRecovery(false);
+    };
+    if (window._helmPasswordRecovery) setIsRecovery(true);
+    window.addEventListener('helm-password-recovery', handleRecovery);
+    window.addEventListener('helm-recovery-done', handleRecoveryDone);
+
     return () => {
       mounted = false;
       unsubscribe();
+      window.removeEventListener('helm-password-recovery', handleRecovery);
+      window.removeEventListener('helm-recovery-done', handleRecoveryDone);
     };
   }, []);
 
@@ -1373,7 +1494,8 @@ function AuthWrapper({ children }) {
     }, '🔄 Loading...');
   }
 
-  if (!user) {
+  // Show AuthScreen for password recovery even if user session exists
+  if (!user || isRecovery) {
     return React.createElement(AuthScreen);
   }
 
