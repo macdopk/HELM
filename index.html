@@ -5768,12 +5768,12 @@ function HelmApp() {
     if (isNew && !localStorage.getItem('helmStarterDone')) setTimeout(() => setStarterFlow(0), 800);
   };
   const analyzeToken = async (overrideAddress) => {
-    const addr = overrideAddress || tokenAddress;
+    const addr = (typeof overrideAddress === 'string' && overrideAddress) ? overrideAddress : tokenAddress;
     if (!addr) {
       showToast('Please enter a token address', 'warning');
       return;
     }
-    if (overrideAddress) setTokenAddress(overrideAddress);
+    if (typeof overrideAddress === 'string' && overrideAddress) setTokenAddress(overrideAddress);
     setLoading(true);
     try {
       const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`);
