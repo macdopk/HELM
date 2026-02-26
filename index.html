@@ -1052,6 +1052,8 @@ const authService = {
 
   // Get current session
   async getSession() {
+    const ready = await authService.ensureClient();
+    if (!ready) return null;
     const { data: { session } } = await supabaseClient.auth.getSession();
     currentUser = session?.user || null;
     return session;
@@ -1098,16 +1100,15 @@ const authService = {
     const ready = await authService.ensureClient();
     if (!ready) return { error: null };
     
-    // Clear all HELM user data from localStorage
-    localStorage.removeItem('helmUser');
-    localStorage.removeItem('helmUserKey');
-    localStorage.removeItem('helmAuthKey');
-    localStorage.removeItem('helmMissions');
-    localStorage.removeItem('helmAds');
-    localStorage.removeItem('helmStarterDone');
-    
     const { error } = await supabaseClient.auth.signOut();
     if (!error) {
+      // Clear all HELM user data from localStorage AFTER successful signOut
+      localStorage.removeItem('helmUser');
+      localStorage.removeItem('helmUserKey');
+      localStorage.removeItem('helmAuthKey');
+      localStorage.removeItem('helmMissions');
+      localStorage.removeItem('helmAds');
+      localStorage.removeItem('helmStarterDone');
       currentUser = null;
       this.notifyListeners();
     }
@@ -2628,7 +2629,7 @@ function TradeInfoModal({
   onClose
 }) {
   const cp = trade.currentPrice || trade.avgEntryPrice;
-  const pc = (cp - trade.avgEntryPrice) / trade.avgEntryPrice * 100;
+  const pc = trade.avgEntryPrice ? (cp - trade.avgEntryPrice) / trade.avgEntryPrice * 100 : 0;
   const pPnl = (trade.partialExits || []).reduce((s, e) => s + e.pnl, 0);
   const uPnl = trade.totalInvested * (pc / 100);
   const tPnl = pPnl + uPnl;
@@ -4953,6 +4954,8 @@ function HelmApp() {
               }
               if (freshData && freshData.createdAt && 
                   (!userData.createdAt || (freshData.trades?.length || 0) >= (userData.trades?.length || 0))) {
+                // Skip if user already interacted (made trades, etc.)
+                if (userSaveCountRef.current > 1) return;
                 freshData.xp = freshData.xp || 0;
                 freshData.badges = freshData.badges || [];
                 freshData.currentStreak = freshData.currentStreak || 0;
@@ -5255,6 +5258,7 @@ function HelmApp() {
   });
   const pnlChartRef = useRef(null);
   const winRateChartRef = useRef(null);
+  const userSaveCountRef = useRef(0); // Counts [user] effect fires; >1 means user has been actively modified
   const showToast = (message, type = 'success') => {
     setToast({
       message,
@@ -5355,6 +5359,7 @@ function HelmApp() {
   }, []);
   useEffect(() => {
     if (user) {
+      userSaveCountRef.current += 1;
       localStorage.setItem('helmUser', JSON.stringify(user));
       // Sync to Supabase com ambas as chaves
       const key = localStorage.getItem('helmUserKey') || ('helmuser_' + (user.username||'').toLowerCase());
@@ -5675,8 +5680,7 @@ function HelmApp() {
     saveMissionsData(data);
     
     // Dar 0.2 SOL
-    const updated = {...user, balance: user.balance + 0.2};
-    setUser(updated);
+    setUser(prev => ({...prev, balance: (prev.balance || 0) + 0.2}));
     showToast(`✅ Post reward: +0.2 SOL (${data.posts_this_week}/3 this week)`, 'success');
     
     return true;
@@ -5710,7 +5714,16 @@ function HelmApp() {
       try {
         const r = await helmStorage.get(key, true);
         if (r && r.value) {
-          userData = JSON.parse(r.value);
+          const existingData = JSON.parse(r.value);
+          
+          // ⚠️ CRITICAL: Check if this username belongs to a DIFFERENT authenticated user
+          if (existingData.auth_id && authUser && existingData.auth_id !== authUser.id) {
+            // Username is TAKEN by another account
+            showToast('⚠️ Username "' + username + '" is already taken. Choose another.', 'error');
+            return;
+          }
+          
+          userData = existingData;
           // Migrar campos antigos
           userData.xp = userData.xp || 0;
           userData.badges = userData.badges || [];
@@ -5721,8 +5734,8 @@ function HelmApp() {
             entries: t.entries || [{price: t.avgEntryPrice||0, amountSOL: t.totalInvested||0, timestamp: t.openedAt||new Date().toISOString()}],
             partialExits: t.partialExits || [],
           })) : [];
-          // Vincular auth_id se disponível
-          if (authUser) {
+          // Vincular auth_id se disponível (migration de conta antiga sem auth)
+          if (authUser && !userData.auth_id) {
             userData.auth_id = authUser.id;
           }
         }
@@ -5902,6 +5915,10 @@ function HelmApp() {
     });
   };
   const confirmApe = (amount, reason) => {
+    if (!analysis || !analysis.price || analysis.price <= 0) {
+      showToast('Cannot trade — token price is $0', 'error');
+      return;
+    }
     const slipPct = calcSlippage(analysis.volume24h);
     const slipCost = amount * slipPct;
     const effectiveAmount = amount + slipCost;
@@ -5951,9 +5968,8 @@ function HelmApp() {
     });
   };
   const confirmDCA = async (amount, trade) => {
-    const dcaSlipPct = calcSlippage(analysis?.volume24h || 0);
-    const dcaSlipCost = amount * dcaSlipPct;
-    if (isNaN(amount) || amount <= 0 || (amount + dcaSlipCost) > user.balance) {
+    // Pre-validate with conservative 5% slippage estimate
+    if (isNaN(amount) || amount <= 0 || (amount * 1.05) > user.balance) {
       showToast('Insufficient balance (including slippage)!', 'error');
       return;
     }
@@ -5961,7 +5977,17 @@ function HelmApp() {
     try {
       const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${trade.tokenAddress}`);
       const data = await res.json();
-      const currentPrice = data.pairs?.[0] ? parseFloat(data.pairs[0].priceUsd) : trade.avgEntryPrice;
+      const pair = data.pairs?.[0];
+      const currentPrice = pair ? parseFloat(pair.priceUsd) : trade.avgEntryPrice;
+      // Use actual volume from fetched data for correct slippage
+      const actualVolume = pair ? (pair.volume?.h24 || 0) : 0;
+      const dcaSlipPct = calcSlippage(actualVolume);
+      const dcaSlipCost = amount * dcaSlipPct;
+      // Re-validate with real slippage
+      if ((amount + dcaSlipCost) > user.balance) {
+        showToast('Insufficient balance (including slippage)!', 'error');
+        return;
+      }
       const newEntry = {
         price: currentPrice,
         amountSOL: amount,
@@ -6004,8 +6030,8 @@ function HelmApp() {
       const data = await res.json();
       const currentPrice = data.pairs?.[0] ? parseFloat(data.pairs[0].priceUsd) : trade.avgEntryPrice;
       const sellAmount = trade.totalInvested * (percentage / 100);
-      const priceChange = (currentPrice - trade.avgEntryPrice) / trade.avgEntryPrice * 100;
-      const partialVol = data.pairs?.[0] ? parseFloat(data.pairs[0].volume?.h24 || 0) * currentPrice : 0;
+      const priceChange = trade.avgEntryPrice ? (currentPrice - trade.avgEntryPrice) / trade.avgEntryPrice * 100 : 0;
+      const partialVol = data.pairs?.[0] ? parseFloat(data.pairs[0].volume?.h24 || 0) : 0;
       const partialSlipPct = calcSlippage(partialVol || 0);
       const partialSlipCost = (sellAmount + sellAmount * (priceChange / 100)) * partialSlipPct;
       const pnl = sellAmount * (priceChange / 100) - partialSlipCost;
@@ -6043,16 +6069,16 @@ function HelmApp() {
   const confirmCloseTrade = async (tradeId, sellReason) => {
     setCloseModal(null);
     const trade = user.trades.find(t => t.id === tradeId);
-    if (!trade) return;
+    if (!trade || trade.status === 'closed') return;
     try {
       const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${trade.tokenAddress}`);
       const data = await res.json();
       const currentPrice = data.pairs?.[0] ? parseFloat(data.pairs[0].priceUsd) : trade.avgEntryPrice;
-      const priceChange = (currentPrice - trade.avgEntryPrice) / trade.avgEntryPrice * 100;
+      const priceChange = trade.avgEntryPrice ? (currentPrice - trade.avgEntryPrice) / trade.avgEntryPrice * 100 : 0;
       const partialPnl = (trade.partialExits || []).reduce((sum, exit) => sum + exit.pnl, 0);
       const remainingPnl = trade.totalInvested * (priceChange / 100);
       // Slippage on exit: use volume from live data or trade's recorded slippage tier
-      const exitVol = data.pairs?.[0] ? parseFloat(data.pairs[0].volume?.h24 || 0) * currentPrice : 0;
+      const exitVol = data.pairs?.[0] ? parseFloat(data.pairs[0].volume?.h24 || 0) : 0;
       const exitSlipPct = calcSlippage(exitVol || (trade.slippagePct ? trade.slippagePct * 150000 : 0));
       const exitSlipCost = (trade.totalInvested + remainingPnl) * exitSlipPct;
       const totalPnl = partialPnl + remainingPnl - exitSlipCost;
@@ -6119,7 +6145,7 @@ function HelmApp() {
       const data = await res.json();
       if (data.pairs?.[0]) {
         const currentPrice = parseFloat(data.pairs[0].priceUsd);
-        const priceChange = (currentPrice - trade.avgEntryPrice) / trade.avgEntryPrice * 100;
+        const priceChange = trade.avgEntryPrice ? (currentPrice - trade.avgEntryPrice) / trade.avgEntryPrice * 100 : 0;
         showToast(`${trade.tokenSymbol}: $${currentPrice.toFixed(8)} (${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(1)}%)`, priceChange >= 0 ? 'success' : 'warning');
         const updatedUser = {
           ...user,
@@ -6341,14 +6367,17 @@ function HelmApp() {
         React.createElement("button", {
           onClick: async () => {
             if (confirm("Log out?")) {
-              localStorage.removeItem('helmUser');
-              localStorage.removeItem('helmUserKey');
-              localStorage.removeItem('helmAuthKey');
-              localStorage.removeItem('helmMissions');
-              localStorage.removeItem('helmAds');
-              localStorage.removeItem('helmStarterDone');
-              await window.authService.signOut();
-              // Recarregar página para limpar estado
+              try {
+                await window.authService.signOut();
+              } catch(e) {
+                // Force cleanup even if signOut fails
+                localStorage.removeItem('helmUser');
+                localStorage.removeItem('helmUserKey');
+                localStorage.removeItem('helmAuthKey');
+                localStorage.removeItem('helmMissions');
+                localStorage.removeItem('helmAds');
+                localStorage.removeItem('helmStarterDone');
+              }
               window.location.reload();
             }
           },
@@ -6643,13 +6672,16 @@ function HelmApp() {
   }, "\uD83C\uDF31 Restart Starter Flow"), /*#__PURE__*/React.createElement("button", {
     onClick: async () => {
       if (confirm('Log out?')) {
-        localStorage.removeItem('helmUser');
-        localStorage.removeItem('helmUserKey');
-        localStorage.removeItem('helmAuthKey');
-        localStorage.removeItem('helmMissions');
-        localStorage.removeItem('helmAds');
-        localStorage.removeItem('helmStarterDone');
-        await window.authService.signOut();
+        try {
+          await window.authService.signOut();
+        } catch(e) {
+          localStorage.removeItem('helmUser');
+          localStorage.removeItem('helmUserKey');
+          localStorage.removeItem('helmAuthKey');
+          localStorage.removeItem('helmMissions');
+          localStorage.removeItem('helmAds');
+          localStorage.removeItem('helmStarterDone');
+        }
         window.location.reload();
       }
     },
@@ -7880,7 +7912,7 @@ function HelmApp() {
     style: { color: 'var(--text-secondary)', marginTop: '15px' }
   }, "No active trades. Go to Analysis tab to buy tokens!") : user.trades.filter(t => t.status === 'active').map(trade => {
     const currentPrice = trade.currentPrice || trade.avgEntryPrice;
-    const priceChange = (currentPrice - trade.avgEntryPrice) / trade.avgEntryPrice * 100;
+    const priceChange = trade.avgEntryPrice ? (currentPrice - trade.avgEntryPrice) / trade.avgEntryPrice * 100 : 0;
     const partialPnl = (trade.partialExits || []).reduce((sum, exit) => sum + exit.pnl, 0);
     const unrealizedPnl = trade.totalInvested * (priceChange / 100);
     const totalPnl = partialPnl + unrealizedPnl - (trade.slippageCost || 0);
@@ -7988,7 +8020,7 @@ function HelmApp() {
     style: { color: 'var(--text-secondary)', marginTop: '15px' }
   }, "No closed trades yet") : user.trades.filter(t => t.status === 'closed').slice().reverse().map(trade => {
     const totalPnl = trade.totalPnl || 0;
-    const pnlPct = totalPnl / trade.totalInvested * 100;
+    const pnlPct = trade.totalInvested ? (totalPnl / trade.totalInvested * 100) : 0;
     const isWin = totalPnl >= 0;
     return React.createElement("div", {
       key: trade.id,
