@@ -3134,20 +3134,37 @@ function CommunityTab({
   const fetchPosts = async () => {
     setPostsLoading(true);
     try {
-      const result = await store.list(storageKey(topic), true);
-      const keys = result?.keys || [];
-      const loaded = [];
-      for (const key of keys) {
-        try {
-          const r = await store.get(key, true);
-          if (r?.value) {
-            const p = JSON.parse(r.value);
+      const prefix = storageKey(topic);
+      let loaded = [];
+      if (window.storage && _sbReady && supabaseClient) {
+        const token = await helmStorage.getAuthToken();
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/helm_storage?key=like.${encodeURIComponent(prefix + '%')}&select=key,value&order=updated_at.desc&limit=200`,
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token } }
+        );
+        if (res.ok) {
+          const rows = await res.json();
+          for (const row of rows) {
+            try {
+              const p = JSON.parse(row.value);
+              const cfg = COMMUNITY_TOPICS.find(t => t.id === p.topic);
+              if (cfg?.expiry && Date.now() - p.createdAt > cfg.expiry * 3600000) continue;
+              if ((p.reports || 0) >= 5) continue;
+              loaded.push(p);
+            } catch {}
+          }
+        }
+      } else {
+        const keys = Object.keys(localStorage).filter(k => k.startsWith(prefix));
+        for (const key of keys) {
+          try {
+            const p = JSON.parse(localStorage.getItem(key));
             const cfg = COMMUNITY_TOPICS.find(t => t.id === p.topic);
             if (cfg?.expiry && Date.now() - p.createdAt > cfg.expiry * 3600000) continue;
             if ((p.reports || 0) >= 5) continue;
             loaded.push(p);
-          }
-        } catch {}
+          } catch {}
+        }
       }
       loaded.sort((a, b) => {
         if ((b.likes || 0) >= 5 && (a.likes || 0) < 5) return 1;
@@ -3163,14 +3180,20 @@ function CommunityTab({
   // ── FETCH RANK ──
   const fetchCommunityRank = async () => {
     try {
-      const result = await store.list('helmcommrank', true);
-      const keys = result?.keys || [];
-      const entries = [];
-      for (const key of keys) {
-        try {
-          const r = await store.get(key, true);
-          if (r?.value) entries.push(JSON.parse(r.value));
-        } catch {}
+      let entries = [];
+      if (window.storage && _sbReady && supabaseClient) {
+        const token = await helmStorage.getAuthToken();
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/helm_storage?key=like.helmcommrank%25&select=key,value&order=updated_at.desc&limit=200`,
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token } }
+        );
+        if (res.ok) {
+          const rows = await res.json();
+          entries = rows.map(row => { try { return JSON.parse(row.value); } catch { return null; } }).filter(Boolean);
+        }
+      } else {
+        const keys = Object.keys(localStorage).filter(k => k.startsWith('helmcommrank'));
+        entries = keys.map(k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }).filter(Boolean);
       }
       entries.sort((a, b) => (b.totalLikes || 0) - (a.totalLikes || 0));
       setCommunityRank(entries);
@@ -5525,17 +5548,44 @@ function HelmApp() {
   const fetchRanking = async () => {
     setRankingLoading(true);
     try {
-      const result = await gstore.list('helmrank', true);
-      const keys = (result?.keys || []).filter(k => !k.startsWith('helmcommrank'));
-      const entries = await Promise.all(keys.map(async k => {
-        try {
-          const r = await gstore.get(k, true);
-          return r ? JSON.parse(r.value) : null;
-        } catch {
-          return null;
+      // Optimized: single query fetches keys AND values together
+      if (window.storage && _sbReady && supabaseClient) {
+        const token = await helmStorage.getAuthToken();
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/helm_storage?key=like.helmrank%25&key=not.like.helmcommrank%25&select=key,value&order=updated_at.desc&limit=200`,
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token } }
+        );
+        if (res.ok) {
+          const rows = await res.json();
+          const entries = rows.map(row => {
+            try { return JSON.parse(row.value); } catch { return null; }
+          }).filter(Boolean).map(r => ({
+            ...r,
+            xp: r.xp || 0,
+            totalPnl: r.totalPnl || 0,
+            winRate: r.winRate || 0,
+            trades: r.trades || 0,
+            username: r.username || 'Anon'
+          }));
+          setRanking(entries.sort((a, b) => b.xp - a.xp));
+        } else {
+          throw new Error('fetch failed');
         }
-      }));
-      setRanking(entries.filter(Boolean).sort((a, b) => b.xp - a.xp));
+      } else {
+        // localStorage fallback
+        const keys = Object.keys(localStorage).filter(k => k.startsWith('helmrank') && !k.startsWith('helmcommrank'));
+        const entries = keys.map(k => {
+          try { return JSON.parse(localStorage.getItem(k)); } catch { return null; }
+        }).filter(Boolean).map(r => ({
+          ...r,
+          xp: r.xp || 0,
+          totalPnl: r.totalPnl || 0,
+          winRate: r.winRate || 0,
+          trades: r.trades || 0,
+          username: r.username || 'Anon'
+        }));
+        setRanking(entries.sort((a, b) => b.xp - a.xp));
+      }
     } catch (e) {
       setRanking([]);
     } finally {
@@ -6134,7 +6184,6 @@ function HelmApp() {
       }
       // Publish updated ranking data after close
       setTimeout(() => publishRanking(updatedUser), 800);
-      setTimeout(() => checkCloseMission(), 1200);
     } catch (error) {
       showToast('Error fetching price', 'error');
     }
@@ -6262,7 +6311,7 @@ function HelmApp() {
 
     // overtrading: >5 trades opened in last 24h
     const now = Date.now();
-    const trades24h = all.filter(t => now - new Date(t.createdAt) < 86400000).length;
+    const trades24h = all.filter(t => now - new Date(t.openedAt) < 86400000).length;
     const isOvertrading = trades24h >= 5;
 
     // archetype
@@ -6505,14 +6554,14 @@ function HelmApp() {
       fontSize: '0.86rem',
       color: user.balance < 0.5 ? 'var(--danger)' : 'inherit'
     }
-  }, user.balance.toFixed(2), " SOL"), /*#__PURE__*/React.createElement("div", {
+  }, (user.balance || 0).toFixed(2), " SOL"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: '0.67rem',
       color: 'rgba(255,255,255,0.4)'
     }
-  }, toUSD(user.balance))), (() => {
+  }, toUSD(user.balance || 0))), (() => {
     const openVal = (user.trades || []).filter(t => t.status === 'active').reduce((s, t) => s + (t.totalInvested || 0), 0);
-    const tw = user.balance + openVal;
+    const tw = (user.balance || 0) + openVal;
     return /*#__PURE__*/React.createElement("div", {
       style: {
         padding: '5px 11px',
@@ -7190,8 +7239,8 @@ function HelmApp() {
 
     // ── Hourly heatmap ──
     const hourMap = Array(24).fill(0);
-    traderProfile.closed.filter(t => t.createdAt).forEach(t => {
-      const h = new Date(t.createdAt).getHours();
+    traderProfile.closed.filter(t => t.openedAt).forEach(t => {
+      const h = new Date(t.openedAt).getHours();
       hourMap[h]++;
     });
     const maxH = Math.max(...hourMap, 1);
@@ -7293,12 +7342,12 @@ function HelmApp() {
         fontWeight: 'bold',
         fontSize: '0.9rem'
       }
-    }, t.tokenSymbol || t.tokenName || 'Token'), t.createdAt && /*#__PURE__*/React.createElement("div", {
+    }, t.tokenSymbol || t.tokenName || 'Token'), t.openedAt && /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: '0.72rem',
         color: 'var(--text-secondary)'
       }
-    }, new Date(t.createdAt).toLocaleDateString('en-US'))), /*#__PURE__*/React.createElement("div", {
+    }, new Date(t.openedAt).toLocaleDateString('en-US'))), /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'right'
       }
@@ -7893,11 +7942,12 @@ function HelmApp() {
   }, "\uD83D\uDCB0 Balance: ", /*#__PURE__*/React.createElement("strong", null, (user.balance || 0).toFixed(2), " SOL")), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       if (confirm('Clear ALL trades? (cannot undo)')) {
-        setUser({
-          ...user,
+        setUser(prev => ({
+          ...prev,
           trades: [],
-          balance: 5.0
-        });
+          balance: 5.0,
+          currentStreak: 0
+        }));
         showToast('Trades reset!', 'success');
       }
     },
