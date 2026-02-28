@@ -6090,77 +6090,150 @@ function HelmApp() {
           // DEX paid profile
           hasDexPaid: !!(pair.info?.imageUrl || pair.info?.header || pair.info?.socials?.length > 0)
         };
-        let riskScore = 100;
-        const redFlags = [],
-          greenFlags = [];
-        if (tokenData.marketCap > 0) {
-          if (tokenData.marketCap < 10000) { riskScore -= 20; redFlags.push('🚨 MC < $10k — too small, extremely risky'); }
-          else if (tokenData.marketCap <= 100000) { greenFlags.push('✅ MC $' + (tokenData.marketCap/1000).toFixed(0) + 'k — sweet spot ($10k-$100k entry zone)'); }
-          else if (tokenData.marketCap > 1000000) { riskScore -= 10; redFlags.push('⚠️ MC $' + (tokenData.marketCap/1000000).toFixed(1) + 'M — may already be at top'); }
-        }
-        if (tokenData.liquidity < 10000) { riskScore -= 25; redFlags.push('🚨 Very low liquidity (< $10k) — easy to manipulate'); }
-        else if (tokenData.liquidity < 50000) { riskScore -= 12; redFlags.push('⚠️ Low liquidity (< $50k)'); }
-        else if (tokenData.liquidity > 100000) greenFlags.push('✅ Good liquidity (> $100k)');
-        if (tokenData.volume24h < 5000) { riskScore -= 20; redFlags.push('🚨 Very low volume (< $5k/24h) — no real activity'); }
-        else if (tokenData.volume24h > 50000) greenFlags.push('✅ Healthy volume (> $50k/24h)');
-        if (tokenData.marketCap > 0 && tokenData.volume24h > 0) {
-          const volMcRatio = tokenData.volume24h / tokenData.marketCap;
-          if (volMcRatio > 5) { riskScore -= 20; redFlags.push('🚨 Vol/MC ratio ' + volMcRatio.toFixed(1) + 'x — possible wash trading'); }
-          else if (volMcRatio > 2) { riskScore -= 10; redFlags.push('⚠️ Vol/MC ratio ' + volMcRatio.toFixed(1) + 'x — suspicious'); }
-        }
+        let riskScore = 50; // começa em 50 — token precisa PROVAR que merece score alto
+        const redFlags = [], greenFlags = [];
+
+        // 1. PENALIDADE POR DADOS AUSENTES
+        if (!tokenData.pairCreatedAt)                                { riskScore -= 15; redFlags.push('⚠️ Token age unknown — cannot verify launch date'); }
+        if (!tokenData.holders || tokenData.holders === 0)           { riskScore -= 10; redFlags.push('⚠️ Holder data unavailable — cannot verify distribution'); }
+        if (!tokenData.volume24h || tokenData.volume24h === 0)       { riskScore -= 10; redFlags.push('🚨 No volume data — token may be dead or very new'); }
+
+        // 2. IDADE (fator mais crítico)
         if (tokenData.pairCreatedAt) {
           const ageDays = (Date.now() - tokenData.pairCreatedAt) / 86400000;
-          if (ageDays < 1)      { riskScore -= 35; redFlags.push('🚨 Token < 1 day old — extreme rug risk'); }
-          else if (ageDays < 3) { riskScore -= 25; redFlags.push('🚨 Token < 3 days old — very risky'); }
-          else if (ageDays < 7) { riskScore -= 15; redFlags.push('⚠️ Very new token (< 1 week)'); }
-          else if (ageDays > 30) greenFlags.push('✅ Established token (> 30 days)');
+          if      (ageDays < 1)  { riskScore -= 40; redFlags.push('🚨 Token < 24h old — EXTREME rug risk, most rugs happen here'); }
+          else if (ageDays < 3)  { riskScore -= 30; redFlags.push('🚨 Token < 3 days old — very high rug probability'); }
+          else if (ageDays < 7)  { riskScore -= 20; redFlags.push('⚠️ Token < 1 week old — still high risk window'); }
+          else if (ageDays < 14) { riskScore -= 10; redFlags.push('⚠️ Token < 2 weeks old — proceed with caution'); }
+          else if (ageDays >= 30){ riskScore += 10; greenFlags.push('✅ Token survived 30+ days — passed first rug window'); }
+          else if (ageDays >= 14){ riskScore += 5;  greenFlags.push('✅ Token survived 2 weeks — reduced early rug risk'); }
         }
-        if (tokenData.topHolderPct > 0) {
-          if (tokenData.topHolderPct > 10) { riskScore -= 25; redFlags.push('🚨 Top holder owns ' + tokenData.topHolderPct.toFixed(1) + '% — likely insider/sniper'); }
-          else if (tokenData.topHolderPct > 3) { riskScore -= 12; redFlags.push('⚠️ Top holder ' + tokenData.topHolderPct.toFixed(1) + '% — above 2.5-3% safe threshold'); }
-          else if (tokenData.topHolderPct <= 2.5) greenFlags.push('✅ Top holder ' + tokenData.topHolderPct.toFixed(1) + '% — within safe insider threshold (<=2.5%)');
-        }
-        if (tokenData.holders > 0 && tokenData.marketCap > 0) {
-          const avgBag = tokenData.marketCap / tokenData.holders;
-          tokenData.avgBagUsd = avgBag;
-          if (avgBag > tokenData.holders) { riskScore -= 15; redFlags.push('🚨 Avg bag $' + avgBag.toFixed(0) + ' > ' + tokenData.holders + ' holders — suspicious concentration'); }
-          if (tokenData.holders > 1000 && avgBag < 50) { riskScore -= 12; redFlags.push('⚠️ ' + tokenData.holders.toLocaleString() + ' holders but avg bag only $' + avgBag.toFixed(0) + ' — possible bots'); }
-          if (tokenData.holders >= 500 && avgBag >= 50 && avgBag <= tokenData.holders) greenFlags.push('✅ Healthy distribution: ' + tokenData.holders.toLocaleString() + ' holders, avg bag $' + avgBag.toFixed(0));
-          if (tokenData.holders < 100) { riskScore -= 15; redFlags.push('🚨 Only ' + tokenData.holders + ' holders — very early'); }
-          else if (tokenData.holders < 300) { riskScore -= 8; redFlags.push('⚠️ Only ' + tokenData.holders + ' holders — low distribution'); }
-          else if (tokenData.holders > 2000) greenFlags.push('✅ Strong holder base: ' + tokenData.holders.toLocaleString() + ' holders');
-        }
-        const buys = tokenData.txns24h && tokenData.txns24h.buys || 0;
-        const sells = tokenData.txns24h && tokenData.txns24h.sells || 0;
-        const totalTxns = buys + sells;
-        if (totalTxns < 10) { riskScore -= 15; redFlags.push('🚨 Very few transactions (< 10 in 24h)'); }
-        else if (totalTxns > 100) greenFlags.push('✅ Active trading (> 100 txns/24h)');
-        if (sells > 0 && buys/sells < 0.5) { riskScore -= 12; redFlags.push('🚨 Strong sell pressure — whales dumping?'); }
-        else if (buys > sells * 1.5) greenFlags.push('✅ Strong buy pressure');
-        if (totalTxns > 20 && sells > 0 && buys/sells > 10) { riskScore -= 18; redFlags.push('🚨 Suspicious buy/sell ratio (' + buys + '/' + sells + ') — possible wash trading'); }
-        const pc1h = tokenData.priceChange1h||0, pc6h = tokenData.priceChange6h||0, pc24h = tokenData.priceChange24h||0;
-        if (pc1h>30 && pc6h>30 && pc24h>50) { riskScore -= 15; redFlags.push('🚨 Continuous pump (+' + pc1h.toFixed(0) + '%/1h) — wait for dip'); }
-        if (Math.abs(pc24h) > 100) { riskScore -= 15; redFlags.push('🚨 Extreme 24h volatility'); }
+
+        // 3. LIQUIDEZ
+        if      (tokenData.liquidity < 5000)   { riskScore -= 35; redFlags.push('🚨 Liquidity < $5k — you CANNOT exit without crashing price'); }
+        else if (tokenData.liquidity < 10000)  { riskScore -= 25; redFlags.push('🚨 Very low liquidity (< $10k) — extremely easy to manipulate'); }
+        else if (tokenData.liquidity < 30000)  { riskScore -= 15; redFlags.push('⚠️ Low liquidity (< $30k) — high slippage on exit'); }
+        else if (tokenData.liquidity < 50000)  { riskScore -= 8;  redFlags.push('⚠️ Moderate liquidity (< $50k) — careful with position size'); }
+        else if (tokenData.liquidity > 200000) { riskScore += 12; greenFlags.push('✅ Strong liquidity (> $200k) — can exit without major slippage'); }
+        else if (tokenData.liquidity > 100000) { riskScore += 8;  greenFlags.push('✅ Good liquidity (> $100k)'); }
+
+        // 4. MC/LIQUIDEZ RATIO
         if (tokenData.marketCap > 0 && tokenData.liquidity > 0) {
           const ratio = tokenData.marketCap / tokenData.liquidity;
-          if (ratio > 1000) { riskScore -= 15; redFlags.push('🚨 MC/Liq ratio ' + (ratio/1000).toFixed(1) + 'k× — very easy to dump'); }
-          else if (ratio < 50) greenFlags.push('✅ Healthy MC/Liq ratio');
+          if      (ratio > 5000) { riskScore -= 30; redFlags.push(`🚨 MC/Liq ratio ${(ratio/1000).toFixed(1)}k× — one whale dumps and it's over`); }
+          else if (ratio > 2000) { riskScore -= 22; redFlags.push(`🚨 MC/Liq ratio ${(ratio/1000).toFixed(1)}k× — extremely easy to dump`); }
+          else if (ratio > 1000) { riskScore -= 15; redFlags.push(`⚠️ MC/Liq ratio ${(ratio/1000).toFixed(1)}k× — high dump risk`); }
+          else if (ratio > 500)  { riskScore -= 8;  redFlags.push(`⚠️ MC/Liq ratio ${ratio.toFixed(0)}× — moderate dump risk`); }
+          else if (ratio < 20)   { riskScore += 12; greenFlags.push('✅ Excellent MC/Liq ratio — very hard to manipulate price'); }
+          else if (ratio < 50)   { riskScore += 7;  greenFlags.push('✅ Healthy MC/Liq ratio'); }
         }
+
+        // 5. MARKET CAP
+        if (tokenData.marketCap > 0) {
+          if      (tokenData.marketCap < 5000)    { riskScore -= 20; redFlags.push('🚨 MC < $5k — micro cap, extreme volatility'); }
+          else if (tokenData.marketCap < 10000)   { riskScore -= 12; redFlags.push('🚨 MC < $10k — very small, high manipulation risk'); }
+          else if (tokenData.marketCap <= 50000)  { riskScore += 5;  greenFlags.push(`✅ MC $${(tokenData.marketCap/1000).toFixed(0)}k — early entry zone`); }
+          else if (tokenData.marketCap <= 200000) { riskScore += 8;  greenFlags.push(`✅ MC $${(tokenData.marketCap/1000).toFixed(0)}k — sweet spot`); }
+          else if (tokenData.marketCap > 5000000) { riskScore -= 8;  redFlags.push(`⚠️ MC $${(tokenData.marketCap/1000000).toFixed(1)}M — limited upside from here`); }
+          else if (tokenData.marketCap > 1000000) { riskScore -= 5;  redFlags.push(`⚠️ MC $${(tokenData.marketCap/1000000).toFixed(1)}M — may already be near top`); }
+        }
+
+        // 6. VOLUME 24H
+        if (tokenData.volume24h > 0) {
+          if      (tokenData.volume24h < 1000)   { riskScore -= 25; redFlags.push('🚨 Volume < $1k/24h — nobody is trading this'); }
+          else if (tokenData.volume24h < 5000)   { riskScore -= 18; redFlags.push('🚨 Very low volume (< $5k/24h) — minimal real activity'); }
+          else if (tokenData.volume24h < 20000)  { riskScore -= 8;  redFlags.push('⚠️ Low volume (< $20k/24h)'); }
+          else if (tokenData.volume24h > 500000) { riskScore += 12; greenFlags.push('✅ Very high volume (> $500k/24h) — strong market activity'); }
+          else if (tokenData.volume24h > 100000) { riskScore += 8;  greenFlags.push('✅ Strong volume (> $100k/24h)'); }
+          else if (tokenData.volume24h > 50000)  { riskScore += 5;  greenFlags.push('✅ Healthy volume (> $50k/24h)'); }
+        }
+
+        // 7. VOL/MC RATIO (wash trading)
+        if (tokenData.marketCap > 0 && tokenData.volume24h > 0) {
+          const volMcRatio = tokenData.volume24h / tokenData.marketCap;
+          if      (volMcRatio > 10) { riskScore -= 28; redFlags.push(`🚨 Vol/MC ${volMcRatio.toFixed(1)}x — almost certainly wash trading`); }
+          else if (volMcRatio > 5)  { riskScore -= 20; redFlags.push(`🚨 Vol/MC ${volMcRatio.toFixed(1)}x — very suspicious, likely bots`); }
+          else if (volMcRatio > 2)  { riskScore -= 10; redFlags.push(`⚠️ Vol/MC ${volMcRatio.toFixed(1)}x — suspicious activity`); }
+          else if (volMcRatio < 0.1){ riskScore -= 5;  redFlags.push('⚠️ Very low Vol/MC — near-zero trading interest'); }
+        }
+
+        // 8. HOLDERS
+        if (tokenData.holders > 0) {
+          if      (tokenData.holders < 50)   { riskScore -= 25; redFlags.push(`🚨 Only ${tokenData.holders} holders — team likely holds everything`); }
+          else if (tokenData.holders < 100)  { riskScore -= 18; redFlags.push(`🚨 Only ${tokenData.holders} holders — extremely concentrated`); }
+          else if (tokenData.holders < 300)  { riskScore -= 12; redFlags.push(`⚠️ Only ${tokenData.holders} holders — low distribution`); }
+          else if (tokenData.holders < 500)  { riskScore -= 5;  redFlags.push(`⚠️ ${tokenData.holders} holders — still early distribution`); }
+          else if (tokenData.holders > 5000) { riskScore += 15; greenFlags.push(`✅ ${tokenData.holders.toLocaleString()} holders — very strong distribution`); }
+          else if (tokenData.holders > 2000) { riskScore += 10; greenFlags.push(`✅ ${tokenData.holders.toLocaleString()} holders — solid holder base`); }
+          else if (tokenData.holders > 500)  { riskScore += 5;  greenFlags.push(`✅ ${tokenData.holders.toLocaleString()} holders — decent distribution`); }
+          if (tokenData.marketCap > 0) {
+            const avgBag = tokenData.marketCap / tokenData.holders;
+            tokenData.avgBagUsd = avgBag;
+            if (tokenData.holders > 500 && avgBag < 10) { riskScore -= 15; redFlags.push(`⚠️ Avg bag only $${avgBag.toFixed(0)} — likely airdrop bots`); }
+            else if (avgBag > 0 && avgBag < 500)         greenFlags.push(`✅ Avg bag $${avgBag.toFixed(0)} — organic holder size`);
+          }
+        }
+
+        // 9. TOP HOLDER CONCENTRAÇÃO
+        if (tokenData.topHolderPct > 0) {
+          if      (tokenData.topHolderPct > 20) { riskScore -= 30; redFlags.push(`🚨 Top holder owns ${tokenData.topHolderPct.toFixed(1)}% — dev/insider can rug anytime`); }
+          else if (tokenData.topHolderPct > 10) { riskScore -= 22; redFlags.push(`🚨 Top holder owns ${tokenData.topHolderPct.toFixed(1)}% — very dangerous`); }
+          else if (tokenData.topHolderPct > 5)  { riskScore -= 12; redFlags.push(`⚠️ Top holder ${tokenData.topHolderPct.toFixed(1)}% — above safe threshold`); }
+          else if (tokenData.topHolderPct > 3)  { riskScore -= 5;  redFlags.push(`⚠️ Top holder ${tokenData.topHolderPct.toFixed(1)}% — watch this wallet`); }
+          else if (tokenData.topHolderPct <= 2) { riskScore += 8;  greenFlags.push(`✅ Top holder only ${tokenData.topHolderPct.toFixed(1)}% — excellent distribution`); }
+        }
+
+        // 10. TRANSAÇÕES E PRESSÃO
+        const buys = tokenData.txns24h?.buys || 0;
+        const sells = tokenData.txns24h?.sells || 0;
+        const totalTxns = buys + sells;
+        if      (totalTxns < 5)   { riskScore -= 20; redFlags.push('🚨 Less than 5 transactions in 24h — ghost token'); }
+        else if (totalTxns < 20)  { riskScore -= 12; redFlags.push('⚠️ Very few transactions (< 20/24h)'); }
+        else if (totalTxns > 500) { riskScore += 10; greenFlags.push('✅ Very active trading (500+ txns/24h)'); }
+        else if (totalTxns > 100) { riskScore += 5;  greenFlags.push('✅ Active trading (100+ txns/24h)'); }
+        if (sells > 0 && buys/sells < 0.5)      { riskScore -= 15; redFlags.push('🚨 Strong sell pressure — possible dump in progress'); }
+        else if (sells > 0 && buys/sells < 0.8) { riskScore -= 8;  redFlags.push('⚠️ More sells than buys — bearish short-term'); }
+        else if (buys > sells * 2)              { riskScore += 8;  greenFlags.push('✅ Strong buy pressure (2x more buys than sells)'); }
+        if (totalTxns > 20 && sells > 0 && buys/sells > 15) { riskScore -= 22; redFlags.push(`🚨 Extreme buy/sell ratio (${buys}/${sells}) — wash trading`); }
+
+        // 11. VOLATILIDADE
+        const pc1h = tokenData.priceChange1h||0, pc6h = tokenData.priceChange6h||0, pc24h = tokenData.priceChange24h||0;
+        if      (pc1h > 50 && pc6h > 50) { riskScore -= 18; redFlags.push(`🚨 Continuous pump (+${pc1h.toFixed(0)}%/1h) — likely at local top`); }
+        else if (pc1h > 30 && pc6h > 30) { riskScore -= 10; redFlags.push(`⚠️ Strong pump (+${pc1h.toFixed(0)}%/1h) — wait for consolidation`); }
+        if      (Math.abs(pc24h) > 200)  { riskScore -= 18; redFlags.push(`🚨 Extreme 24h volatility (${pc24h.toFixed(0)}%)`); }
+        else if (Math.abs(pc24h) > 100)  { riskScore -= 10; redFlags.push(`⚠️ High 24h volatility (${pc24h.toFixed(0)}%)`); }
+        if (pc24h < -50)                 { riskScore -= 12; redFlags.push(`🚨 Token down ${Math.abs(pc24h).toFixed(0)}% in 24h — strong downtrend`); }
+
+        // 12. DEX E BOOSTS
         const knownDexes = ['raydium','pumpswap','pump.fun','orca','meteora'];
-        if (tokenData.dexId === 'raydium') greenFlags.push("✅ Pair on Raydium — Solana's main DEX");
-        else if (tokenData.dexId==='pumpswap'||tokenData.dexId==='pump.fun') greenFlags.push('✅ Pair on ' + tokenData.dexId + ' — legitimate platform');
-        else if (tokenData.dexId && !knownDexes.includes(tokenData.dexId)) { riskScore -= 8; redFlags.push('⚠️ Pair on unknown DEX (' + tokenData.dexId + ')'); }
-        const boostAmt = tokenData.boosts && tokenData.boosts.active || 0;
-        const hasAds = !!(pair.info && pair.info.header);
-        if (boostAmt > 400) { riskScore -= 25; redFlags.push('🚨 Excessive boost (' + boostAmt + 'x) — farm/dump signal'); if (hasAds) { riskScore -= 10; redFlags.push('🚨 High boost + paid banner = suspicious'); } }
-        else if (boostAmt > 0) greenFlags.push('🚀 ' + boostAmt + 'x DEX Boost active');
-        const isDexPaid = !!(pair.info && (pair.info.imageUrl || pair.info.header || pair.info.socials && pair.info.socials.length > 0));
-        if (isDexPaid && boostAmt <= 400) { riskScore += 10; greenFlags.push('💳 Paid DEX profile — project invested in visibility'); }
-        if (tokenData.links.telegram) greenFlags.push('📣 Verified Telegram on DEX');
-        if (tokenData.links.twitter)  greenFlags.push('🐦 Verified Twitter/X on DEX');
-        if (tokenData.links.website)  greenFlags.push('🌐 Verified website on DEX');
-        if (!tokenData.links.telegram && !tokenData.links.twitter && !tokenData.links.website) { riskScore -= 10; redFlags.push('⚠️ No social links on DEX — anonymous project'); }
-        else if (tokenData.links.telegram && tokenData.links.twitter) greenFlags.push('✅ Multiple social channels verified');
+        if      (tokenData.dexId === 'raydium')                                    { riskScore += 5;  greenFlags.push("✅ Pair on Raydium — Solana's main DEX"); }
+        else if (tokenData.dexId==='pumpswap'||tokenData.dexId==='pump.fun')       { riskScore += 3;  greenFlags.push(`✅ Pair on ${tokenData.dexId}`); }
+        else if (tokenData.dexId && !knownDexes.includes(tokenData.dexId))         { riskScore -= 10; redFlags.push(`⚠️ Unknown DEX (${tokenData.dexId})`); }
+        const boostAmt = tokenData.boosts?.active || 0;
+        const hasAds = !!(pair.info?.header);
+        if      (boostAmt > 400) { riskScore -= 28; redFlags.push(`🚨 Excessive DEX boost (${boostAmt}x) — farm & dump signal`); if (hasAds) { riskScore -= 10; redFlags.push('🚨 High boost + paid banner — very suspicious'); } }
+        else if (boostAmt > 100) { riskScore -= 8;  redFlags.push(`⚠️ Very high DEX boost (${boostAmt}x)`); }
+        else if (boostAmt > 0)   { riskScore += 3;  greenFlags.push(`🚀 ${boostAmt}x DEX Boost active`); }
+        const isDexPaid = !!(pair.info && (pair.info.imageUrl || pair.info.header || pair.info.socials?.length > 0));
+        if (isDexPaid && boostAmt <= 100) { riskScore += 7; greenFlags.push('💳 Paid DEX profile — team invested in legitimacy'); }
+
+        // 13. SOCIAIS
+        if (tokenData.links.telegram) greenFlags.push('📣 Telegram verified on DEX');
+        if (tokenData.links.twitter)  greenFlags.push('🐦 Twitter/X verified on DEX');
+        if (tokenData.links.website)  greenFlags.push('🌐 Website verified on DEX');
+        if (!tokenData.links.telegram && !tokenData.links.twitter && !tokenData.links.website) { riskScore -= 15; redFlags.push('🚨 Zero social links — completely anonymous project'); }
+        else if (tokenData.links.telegram && tokenData.links.twitter && tokenData.links.website) { riskScore += 8; greenFlags.push('✅ Full social presence (Telegram + Twitter + Website)'); }
+        else if (tokenData.links.telegram && tokenData.links.twitter) { riskScore += 4; greenFlags.push('✅ Telegram + Twitter verified'); }
+
+        // 14. CAP FINAL por idade — token novo NUNCA pode ter score alto
+        if (tokenData.pairCreatedAt) {
+          const _ageDaysCap = (Date.now() - tokenData.pairCreatedAt) / 86400000;
+          if      (_ageDaysCap < 1)  riskScore = Math.min(riskScore, 30);
+          else if (_ageDaysCap < 3)  riskScore = Math.min(riskScore, 42);
+          else if (_ageDaysCap < 7)  riskScore = Math.min(riskScore, 58);
+          else if (_ageDaysCap < 14) riskScore = Math.min(riskScore, 72);
+        }
+
         tokenData.holders = tokenData.holders || null;
         tokenData.riskScore = Math.max(0, Math.min(100, riskScore));
         tokenData.redFlags = redFlags;
