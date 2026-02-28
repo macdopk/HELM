@@ -966,6 +966,29 @@
       0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); }
       50% { box-shadow: 0 0 0 8px rgba(59,130,246,0); }
     }
+    /* ── AI COACH ────────────────────────── */
+    .coach-fab { position:fixed; bottom:24px; right:24px; width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#3b82f6,#8b5cf6); border:none; color:#fff; font-size:1.6rem; cursor:pointer; z-index:9998; box-shadow:0 4px 20px rgba(59,130,246,0.4); transition:transform 0.2s,box-shadow 0.2s; display:flex; align-items:center; justify-content:center; }
+    .coach-fab:hover { transform:scale(1.08); box-shadow:0 6px 28px rgba(59,130,246,0.55); }
+    .coach-fab.open { background:linear-gradient(135deg,#ef4444,#f97316); }
+    .coach-panel { position:fixed; bottom:90px; right:16px; width:340px; max-height:520px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:16px; z-index:9999; display:flex; flex-direction:column; box-shadow:0 8px 40px rgba(0,0,0,0.5); animation:coachIn 0.25s ease-out; overflow:hidden; }
+    @keyframes coachIn { from{opacity:0;transform:translateY(20px) scale(0.95)} to{opacity:1;transform:translateY(0) scale(1)} }
+    .coach-header { padding:14px 16px; background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(139,92,246,0.15)); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+    .coach-header-icon { font-size:1.4rem; }
+    .coach-header-text { font-weight:bold; font-size:0.92rem; }
+    .coach-header-sub { font-size:0.72rem; color:var(--text-secondary); }
+    .coach-msgs { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:10px; min-height:200px; max-height:340px; }
+    .coach-msg { padding:10px 14px; border-radius:12px; font-size:0.84rem; line-height:1.5; max-width:92%; animation:coachMsg 0.2s ease-out; }
+    @keyframes coachMsg { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .coach-msg.bot { background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2); align-self:flex-start; }
+    .coach-msg.user { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.2); align-self:flex-end; }
+    .coach-quick { display:flex; flex-wrap:wrap; gap:6px; padding:8px 12px; border-top:1px solid var(--border); }
+    .coach-quick-btn { padding:6px 11px; border-radius:20px; border:1px solid var(--border); background:var(--bg-primary); color:var(--text-primary); font-size:0.75rem; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+    .coach-quick-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(59,130,246,0.08); }
+    .coach-input-wrap { display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--border); }
+    .coach-input { flex:1; padding:8px 12px; border-radius:20px; border:1px solid var(--border); background:var(--bg-primary); color:var(--text-primary); font-size:0.82rem; outline:none; }
+    .coach-input:focus { border-color:var(--accent); }
+    .coach-send { padding:8px 14px; border-radius:20px; border:none; background:var(--accent); color:#fff; font-size:0.82rem; cursor:pointer; font-weight:bold; }
+    @media(max-width:500px){ .coach-panel{right:8px;left:8px;width:auto;bottom:85px;max-height:65vh;} .coach-fab{bottom:16px;right:16px;width:50px;height:50px;font-size:1.4rem;} }
 </style>
     <!-- Supabase JS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -4773,6 +4796,10 @@ function HelmApp() {
   const [glossTip, setGlossTip] = useState(null); // {term, def, x, y}
   const [glossSearch, setGlossSearch] = useState('');
   const [glossCat, setGlossCat] = useState('all');
+  const [coachOpen, setCoachOpen] = useState(false);
+  const [coachMsgs, setCoachMsgs] = useState([]);
+  const [coachInput, setCoachInput] = useState('');
+  const coachMsgsRef = useRef(null);
 
   // ── GLOSSARY DATA ──────────────────────
   const GLOSSARY = [
@@ -6382,6 +6409,171 @@ function HelmApp() {
       setTimeout(() => showToast('⚠️ OVERTRADING — 5+ trades in 24h. Take a breath!', 'warning'), 500);
     }
   }, [traderProfile.trades24h]);
+
+  // ── AI COACH ENGINE ──────────────────────────────────────────
+  const coachAnalyze = (query) => {
+    const q = (query || '').toLowerCase().trim();
+    const tp = traderProfile;
+    const bal = user?.balance || 0;
+    const activeTrades = tp.active || [];
+    const closedTrades = tp.closed || [];
+    const lastAnalysis = analysis;
+
+    // Helper: format SOL
+    const fmtS = v => (v >= 0 ? '+' : '') + v.toFixed(3) + ' SOL';
+
+    // ── PORTFOLIO ANALYSIS ──
+    if (q.match(/portfolio|my trades|positions|how.*doing|status|overview/)) {
+      if (activeTrades.length === 0 && closedTrades.length === 0) {
+        return "You haven't made any trades yet! Go to the Analysis tab, paste a token address, and make your first paper trade. Start small — try 0.1 SOL.";
+      }
+      let msg = `📊 **Portfolio Overview:**\n\n`;
+      msg += `Balance: ${bal.toFixed(2)} SOL\n`;
+      msg += `Open positions: ${activeTrades.length}\n`;
+      msg += `Closed trades: ${closedTrades.length}\n`;
+      if (closedTrades.length > 0) {
+        msg += `Win rate: ${tp.winRate.toFixed(0)}%\n`;
+        msg += `Total P&L: ${fmtS(tp.totalPnl)}\n`;
+        msg += `R/R ratio: ${tp.rr.toFixed(2)}×\n`;
+        msg += `Archetype: ${tp.archetype}\n`;
+      }
+      if (activeTrades.length > 0) {
+        const totalExposed = activeTrades.reduce((s, t) => s + (t.totalInvested || 0), 0);
+        const pctExposed = bal > 0 ? (totalExposed / (bal + totalExposed) * 100).toFixed(0) : 100;
+        msg += `\nExposed in trades: ${totalExposed.toFixed(2)} SOL (${pctExposed}% of total worth)`;
+        if (pctExposed > 60) msg += `\n⚠️ Over 60% exposed — consider taking some profits.`;
+      }
+      return msg;
+    }
+
+    // ── ACTIVE TRADE ADVICE ──
+    if (q.match(/open|active|current|holding|what.*sell|should.*close|exit/)) {
+      if (activeTrades.length === 0) return "No open positions right now. You're free to scout new tokens in the Analysis tab!";
+      let msg = `You have ${activeTrades.length} open position${activeTrades.length > 1 ? 's' : ''}:\n\n`;
+      activeTrades.forEach(t => {
+        msg += `• ${t.tokenSymbol || t.tokenName} — ${t.totalInvested?.toFixed(3)} SOL invested\n`;
+      });
+      msg += `\n💡 To check if you should exit, go to Portfolio, expand a trade, and hit "Update Price". If a token dropped over 40% with declining volume, consider cutting losses.`;
+      return msg;
+    }
+
+    // ── TOKEN ANALYSIS ADVICE ──
+    if (q.match(/analy|this token|red flag|green flag|safe|risk|score|should.*buy|ape/)) {
+      if (!lastAnalysis) return "No token analyzed yet. Go to the Analysis tab, paste a contract address (CA), and I'll have context to help you decide!";
+      let msg = `🔍 **${lastAnalysis.name} (${lastAnalysis.symbol}):**\n\n`;
+      msg += `Risk Score: ${lastAnalysis.riskScore}/100 ${lastAnalysis.riskScore <= 30 ? '🟢' : lastAnalysis.riskScore <= 60 ? '🟡' : '🔴'}\n`;
+      if (lastAnalysis.redFlags?.length > 0) {
+        msg += `\n🚩 Red Flags:\n`;
+        lastAnalysis.redFlags.forEach(f => { msg += `• ${f}\n`; });
+      }
+      if (lastAnalysis.greenFlags?.length > 0) {
+        msg += `\n✅ Green Flags:\n`;
+        lastAnalysis.greenFlags.forEach(f => { msg += `• ${f}\n`; });
+      }
+      // Position size advice
+      const suggestedSize = lastAnalysis.riskScore > 70 ? 0.05 : lastAnalysis.riskScore > 40 ? 0.1 : 0.2;
+      const maxSize = Math.min(suggestedSize, bal * 0.1);
+      msg += `\n💰 Suggested max position: ${Math.max(0.05, maxSize).toFixed(2)} SOL (based on risk + your balance)`;
+      if (lastAnalysis.riskScore > 70) msg += `\n⚠️ High risk — if you ape, use minimum size and set a mental stop-loss at -40%.`;
+      return msg;
+    }
+
+    // ── WIN RATE / PERFORMANCE ──
+    if (q.match(/win.*rate|performance|stats|how.*am.*i|improve|better|results/)) {
+      if (closedTrades.length < 3) return "You need at least 3 closed trades for meaningful stats. Keep trading and come back!";
+      let msg = `📈 **Your Trading Performance:**\n\n`;
+      msg += `Win rate: ${tp.winRate.toFixed(0)}% (${tp.wins.length}W / ${tp.losses.length}L)\n`;
+      msg += `Avg win: ${fmtS(tp.avgWin)}\n`;
+      msg += `Avg loss: ${fmtS(-tp.avgLoss)}\n`;
+      msg += `R/R: ${tp.rr.toFixed(2)}×\n`;
+      msg += `Archetype: ${tp.archetype}\n`;
+      msg += `\n`;
+      // Specific advice based on pattern
+      if (tp.winRate < 40) msg += `🔴 Win rate below 40%. Focus on entry quality — only ape tokens that pass your full red/green flag checklist.`;
+      else if (tp.winRate < 50) msg += `🟡 Close to breakeven. Your entries might be ok but check your exit timing — are you holding losers too long?`;
+      else if (tp.rr < 1) msg += `🟡 Win rate is decent but your losses are bigger than your wins. Cut losses faster or let winners run longer.`;
+      else msg += `🟢 Solid stats! Keep your discipline. Consider reducing position size on high-risk tokens to protect gains.`;
+      if (tp.isOvertrading) msg += `\n\n⚠️ You've made ${tp.trades24h} trades in 24h — that's overtrading. Quality > quantity.`;
+      return msg;
+    }
+
+    // ── SLIPPAGE ──
+    if (q.match(/slip/)) {
+      let msg = `Slippage is the hidden cost of every trade. It's the difference between the price you see and what you actually pay.\n\n`;
+      msg += `Low volume = high slippage = you lose before the trade even moves.\n\n`;
+      msg += `Quick guide:\n• $5M+ vol → ~0.2% slip ✅\n• $100k vol → ~1.2% slip ⚠️\n• $10k vol → ~2.5% slip 🔴\n• <$10k vol → 4%+ slip ❌\n\n`;
+      msg += `HELM simulates real slippage so you see the true cost.`;
+      return msg;
+    }
+
+    // ── WHAT TO DO / BEGINNER ──
+    if (q.match(/start|beginner|new|first|help|what.*do|how.*start|tutorial/)) {
+      if (closedTrades.length === 0) {
+        return `Welcome to HELM! Here's your starter path:\n\n1️⃣ Go to Analysis tab → paste any Solana token CA\n2️⃣ Read the red/green flags and risk score\n3️⃣ If score is under 60, try a small paper trade (0.1 SOL)\n4️⃣ Watch the price, then close the trade\n5️⃣ Check your P&L and the post-trade tip\n\nYou start with 5 SOL. Treat it like real money — that's how you learn.\n\nAlso check the Learn tab for trading rules and the glossary!`;
+      }
+      return `You've closed ${closedTrades.length} trade${closedTrades.length > 1 ? 's' : ''}. Nice!\n\nNext steps:\n• Aim for 10 closed trades to unlock your full trader profile\n• Focus on win rate over P&L — consistency beats big swings\n• Check the Weekly Report (Profile tab) for detailed analysis\n• Use red/green flags on EVERY token before aping`;
+    }
+
+    // ── LOSS STREAK ──
+    if (q.match(/losing|loss|streak|bad|rekt|down|frustrated/)) {
+      if (tp.curLossStreak >= 2) {
+        return `I see you're on a ${tp.curLossStreak}-loss streak. That's rough but normal.\n\n🧘 Don't trade emotionally. Here's what I'd do:\n\n1. Reduce position size to 0.05 SOL until you get a win\n2. Only ape tokens with risk score under 50\n3. Set a mental stop at -30% — cut fast\n4. Review your last 3 losses — same pattern?\n\nThe goal right now isn't profit. It's stopping the bleed.`;
+      }
+      return `Losses are part of the game. Even pro traders lose 40-50% of trades.\n\nThe key is making your wins bigger than your losses (R/R ratio). If your avg win is larger than your avg loss, you'll be profitable even with a 40% win rate.\n\nCheck your stats — type "performance" to see your numbers.`;
+    }
+
+    // ── RISK MANAGEMENT ──
+    if (q.match(/risk|manage|position.*size|how.*much|overexpos/)) {
+      const totalExposed = activeTrades.reduce((s, t) => s + (t.totalInvested || 0), 0);
+      let msg = `⚖️ **Risk Management Guide:**\n\n`;
+      msg += `Your balance: ${bal.toFixed(2)} SOL\n`;
+      msg += `In open trades: ${totalExposed.toFixed(2)} SOL\n`;
+      msg += `Free capital: ${(bal).toFixed(2)} SOL\n\n`;
+      msg += `Rules:\n`;
+      msg += `• Max 5-10% of balance per trade\n`;
+      msg += `• Never have >50% of total in open positions\n`;
+      msg += `• Cut losses at -30% to -40%\n`;
+      msg += `• Take partial profits at 2x, more at 5x\n`;
+      msg += `• Leave a moonbag (10-20%) for runners`;
+      if (totalExposed > (bal + totalExposed) * 0.5) msg += `\n\n⚠️ You're overexposed! Consider closing your weakest position.`;
+      return msg;
+    }
+
+    // ── GLOSSARY LOOKUP ──
+    const glossMatch = GLOSSARY.find(g => {
+      const term = g.t.toLowerCase();
+      const abbr = (g.t.match(/\(([^)]+)\)/) || [])[1]?.toLowerCase();
+      return term.includes(q) || q.includes(term.split('(')[0].trim()) || (abbr && q.includes(abbr));
+    });
+    if (glossMatch) {
+      return `📖 **${glossMatch.t}**\n\n${glossMatch.d}\n\nExample: ${glossMatch.ex}`;
+    }
+
+    // ── FALLBACK ──
+    return `I'm your HELM trading coach! Here's what I can help with:\n\n• "portfolio" — overview of your trades\n• "performance" — your win rate and stats\n• "risk" — position sizing guide\n• "how to start" — beginner path\n• "this token" — analyze current token\n• "losing streak" — advice when you're down\n• Any glossary term (MC, rug, FOMO, etc)\n\nAsk me anything about trading!`;
+  };
+
+  const coachSend = (text) => {
+    const q = text || coachInput;
+    if (!q.trim()) return;
+    const userMsg = { role: 'user', text: q.trim() };
+    const botReply = { role: 'bot', text: coachAnalyze(q.trim()) };
+    setCoachMsgs(prev => [...prev, userMsg, botReply]);
+    setCoachInput('');
+    setTimeout(() => {
+      if (coachMsgsRef.current) coachMsgsRef.current.scrollTop = coachMsgsRef.current.scrollHeight;
+    }, 50);
+  };
+
+  const COACH_QUICK = [
+    { label: '📊 My portfolio', q: 'portfolio' },
+    { label: '📈 Performance', q: 'performance' },
+    { label: '🔍 This token', q: 'this token' },
+    { label: '⚖️ Risk guide', q: 'risk management' },
+    { label: '🆕 How to start', q: 'how to start' },
+    { label: '😰 Losing streak', q: 'losing streak' },
+  ];
+
                                                                                                  // → components/LoginScreen.jsx
 // Analysis tab, Portfolio tab, Ranking tab, Profile tab
 
@@ -7286,7 +7478,7 @@ function HelmApp() {
         gridTemplateColumns: 'repeat(3,1fr)',
         gap: '10px'
       }
-    }, [['Today', pnlDay], ['7 days', pnlWeek], ['30 days', pnlMonth]].map(([label, val]) => /*#__PURE__*/React.createElement("div", {
+    }, [['Hoje', pnlDay], ['7 dias', pnlWeek], ['30 dias', pnlMonth]].map(([label, val]) => /*#__PURE__*/React.createElement("div", {
       key: label,
       style: {
         background: 'var(--bg-primary)',
@@ -7320,7 +7512,7 @@ function HelmApp() {
         marginBottom: '14px',
         fontSize: '0.95rem'
       }
-    }, "\uD83C\uDFC5 Best & Worst Trade"), [['🟢 Best', best, 'var(--success)'], ['🔴 Worst', worst, 'var(--danger)']].map(([label, t, color]) => /*#__PURE__*/React.createElement("div", {
+    }, "\uD83C\uDFC5 Best & Worst Trade"), [['🟢 Melhor', best, 'var(--success)'], ['🔴 Pior', worst, 'var(--danger)']].map(([label, t, color]) => /*#__PURE__*/React.createElement("div", {
       key: label,
       style: {
         display: 'flex',
@@ -7425,7 +7617,7 @@ function HelmApp() {
         color: 'var(--text-secondary)',
         marginBottom: '12px'
       }
-    }, "Peak Hour: ", peakHour, "h\u2013", peakHour + 1, "h (", hourMap[peakHour], " trades)"), /*#__PURE__*/React.createElement("div", {
+    }, "Pico: ", peakHour, "h\u2013", peakHour + 1, "h (", hourMap[peakHour], " trades)"), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: '3px',
@@ -9119,7 +9311,60 @@ React.createElement("div",{key:"HTX / OKX fd",className:"u-card-inner"},
       fontSize: '0.75rem',
       color: 'rgba(255,255,255,0.3)'
     }
-  }, "Click outside to close"))));
+  }, "Click outside to close"))),
+
+  /* ── AI COACH FAB + PANEL ── */
+  user && React.createElement(React.Fragment, null,
+    React.createElement("button", {
+      className: `coach-fab ${coachOpen ? 'open' : ''}`,
+      onClick: () => {
+        setCoachOpen(v => !v);
+        if (!coachOpen && coachMsgs.length === 0) {
+          const greeting = traderProfile.closed.length === 0
+            ? "Hey! I'm your HELM trading coach 🤖⎈\n\nI can help you understand tokens, review your trades, explain terms, and guide your journey.\n\nPaste a token in Analysis tab and ask me about it, or tap a button below!"
+            : `Welcome back! You have ${traderProfile.closed.length} closed trades with ${traderProfile.winRate.toFixed(0)}% win rate.\n\nAsk me anything or tap a quick action below!`;
+          setCoachMsgs([{ role: 'bot', text: greeting }]);
+        }
+      },
+      title: "AI Coach"
+    }, coachOpen ? '✕' : '🤖'),
+    coachOpen && React.createElement("div", { className: "coach-panel" },
+      React.createElement("div", { className: "coach-header" },
+        React.createElement("div", { className: "coach-header-icon" }, "🤖"),
+        React.createElement("div", null,
+          React.createElement("div", { className: "coach-header-text" }, "HELM Coach"),
+          React.createElement("div", { className: "coach-header-sub" }, "Your personal trading assistant")
+        )
+      ),
+      React.createElement("div", { className: "coach-msgs", ref: coachMsgsRef },
+        coachMsgs.map((m, i) => React.createElement("div", {
+          key: i,
+          className: `coach-msg ${m.role}`,
+          style: { whiteSpace: 'pre-line' }
+        }, m.text))
+      ),
+      React.createElement("div", { className: "coach-quick" },
+        COACH_QUICK.map(cq => React.createElement("button", {
+          key: cq.q,
+          className: "coach-quick-btn",
+          onClick: () => coachSend(cq.q)
+        }, cq.label))
+      ),
+      React.createElement("div", { className: "coach-input-wrap" },
+        React.createElement("input", {
+          className: "coach-input",
+          placeholder: "Ask anything...",
+          value: coachInput,
+          onChange: e => setCoachInput(e.target.value),
+          onKeyDown: e => { if (e.key === 'Enter') coachSend(); }
+        }),
+        React.createElement("button", {
+          className: "coach-send",
+          onClick: () => coachSend()
+        }, "→")
+      )
+    )
+  ));
 }
 ReactDOM.render(
   /*#__PURE__*/React.createElement(AuthWrapper, null,
