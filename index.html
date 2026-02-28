@@ -7478,7 +7478,7 @@ function HelmApp() {
         gridTemplateColumns: 'repeat(3,1fr)',
         gap: '10px'
       }
-    }, [['Hoje', pnlDay], ['7 dias', pnlWeek], ['30 dias', pnlMonth]].map(([label, val]) => /*#__PURE__*/React.createElement("div", {
+    }, [['Today', pnlDay], ['7 days', pnlWeek], ['30 days', pnlMonth]].map(([label, val]) => /*#__PURE__*/React.createElement("div", {
       key: label,
       style: {
         background: 'var(--bg-primary)',
@@ -7512,7 +7512,7 @@ function HelmApp() {
         marginBottom: '14px',
         fontSize: '0.95rem'
       }
-    }, "\uD83C\uDFC5 Best & Worst Trade"), [['🟢 Melhor', best, 'var(--success)'], ['🔴 Pior', worst, 'var(--danger)']].map(([label, t, color]) => /*#__PURE__*/React.createElement("div", {
+    }, "\uD83C\uDFC5 Best & Worst Trade"), [['🟢 Best', best, 'var(--success)'], ['🔴 Worst', worst, 'var(--danger)']].map(([label, t, color]) => /*#__PURE__*/React.createElement("div", {
       key: label,
       style: {
         display: 'flex',
@@ -7617,7 +7617,7 @@ function HelmApp() {
         color: 'var(--text-secondary)',
         marginBottom: '12px'
       }
-    }, "Pico: ", peakHour, "h\u2013", peakHour + 1, "h (", hourMap[peakHour], " trades)"), /*#__PURE__*/React.createElement("div", {
+    }, "PeakHour: ", peakHour, "h\u2013", peakHour + 1, "h (", hourMap[peakHour], " trades)"), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: '3px',
