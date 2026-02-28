@@ -5098,6 +5098,23 @@ function HelmApp() {
 
     loadOrCreateUser();
   }, []);
+
+  // ── AUTO-ANALYZE FROM URL PARAM (?ca=ADDRESS) ──
+  // Used by the HELM Chrome Extension when user APEs from DexScreener
+  useEffect(() => {
+    if (userLoading) return; // Wait until user is loaded
+    const params = new URLSearchParams(window.location.search);
+    const ca = params.get('ca');
+    if (ca && ca.length > 20) {
+      setActiveTab('analysis');
+      setTokenAddress(ca);
+      // Small delay to let the UI render first
+      setTimeout(() => analyzeToken(ca), 800);
+      // Clean up URL without reloading
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [userLoading]);
+
   // Slippage simulation: based on 24h volume (lower volume = higher slippage)
   // → services/slippage.js
   const calcSlippage = volumeUsd => {
@@ -5857,6 +5874,175 @@ function HelmApp() {
     showToast(isNew ? 'Welcome to HELM! 🎉' : 'Welcome back, ' + username + '! 👋', 'success');
     if (isNew && !localStorage.getItem('helmStarterDone')) setTimeout(() => setStarterFlow(0), 800);
   };
+  // ── NARRATIVE DETECTION ENGINE ─────────────────────────────────────────────
+  // Detecta narrativa do token pelo nome/symbol + valida com dados de mercado
+  const NARRATIVE_MAP = [
+    // 🤖 AI / Agents
+    { id: 'ai', label: 'AI Agents', emoji: '🤖', color: '#6366f1',
+      keywords: ['ai','gpt','llm','agent','neural','deep','ml','robot','agi','claude','gemini','openai','turbo','sentient','think','brain','mind','compute','algo'],
+      temp: 'hot', desc: 'AI narrative is one of the strongest in crypto right now. Tokens in this meta attract serious capital.' },
+    // 🐸 Animal Memes
+    { id: 'animal', label: 'Animal Meme', emoji: '🐸', color: '#10b981',
+      keywords: ['dog','doge','shib','cat','pepe','frog','ape','monkey','bear','bull','wolf','fox','bird','fish','shark','whale','hamster','rat','mouse','goat','sheep','pig','cow','horse','turtle','snake','eagle','owl','lion','tiger','panda','koala','rabbit','bunny','duck','penguin','seal','otter','crab','lobster','bat','bee','ant','fly','worm'],
+      temp: 'warm', desc: 'Animal memes are a classic crypto narrative. Evergreen but very saturated — needs strong community to stand out.' },
+    // 🏛️ Política
+    { id: 'politics', label: 'Político', emoji: '🏛️', color: '#f59e0b',
+      keywords: ['trump','maga','biden','kamala','harris','republican','democrat','vote','elect','president','congress','senate','white house','potus','gop','pol','eua','usa','america','patriot','freedom','liberty','nation','flag','party','lula','bolsonaro','br','brazil','brasil','pt','psol','psd','mdb','pl'],
+      temp: 'volatile', desc: 'Political tokens pump hard around events but crash just as fast. High risk, high reward — very timing-dependent.' },
+    // 🚀 Elon / SpaceX
+    { id: 'elon', label: 'Elon Universe', emoji: '🚀', color: '#3b82f6',
+      keywords: ['elon','musk','spacex','tesla','neuralink','doge','x.com','boring','starship','mars','xai','grok','twitter','xmusk'],
+      temp: 'warm', desc: 'Elon-related tokens move with his tweets. Watch his X activity — one post can 10x or kill a token overnight.' },
+    // 🌙 Space / Moon
+    { id: 'space', label: 'Space & Moon', emoji: '🌙', color: '#a855f7',
+      keywords: ['moon','space','astro','galaxy','star','cosmos','orbit','rocket','comet','meteor','saturn','jupiter','mars','pluto','sun','lunar','nova','nebula','void','dark','black hole','alien','ufo','et','nasa'],
+      temp: 'cold', desc: 'Space narrative is quiet right now. Could revive with a major SpaceX event or NASA news.' },
+    // 🎌 Anime / Ásia
+    { id: 'anime', label: 'Anime / Ásia', emoji: '🎌', color: '#ec4899',
+      keywords: ['anime','manga','otaku','japan','ninja','samurai','katana','sakura','neko','waifu','goku','naruto','one piece','dragon','demon','sword','blade','ronin','shogun','tokyo','osaka','china','korea','bao','yen','zen','tao','kung','panda'],
+      temp: 'warm', desc: 'Anime meta has a loyal community. Tokens with strong anime branding tend to keep holders longer.' },
+    // 💎 Bitcoin Culture
+    { id: 'btc', label: 'Bitcoin Culture', emoji: '₿', color: '#f59e0b',
+      keywords: ['btc','bitcoin','sat','satoshi','nakamoto','hodl','hal','finney','genesis','block','halving','mining','hash','pow','lightning','taproot','ordinal','inscription','rune','brc'],
+      temp: 'warm', desc: 'BTC-adjacent tokens often pump during Bitcoin bull runs when capital overflows from BTC into alts.' },
+    // 🎮 Gaming / Metaverso
+    { id: 'gaming', label: 'Gaming / Meta', emoji: '🎮', color: '#06b6d4',
+      keywords: ['game','play','quest','hero','legend','pixel','craft','realm','world','land','meta','verse','virtual','arena','guild','clan','raid','loot','nft','item','sword','shield','magic','spell','dungeon','castle','king','queen','knight','warrior','wizard'],
+      temp: 'cold', desc: 'Gaming narrative is currently cold. Waiting for a major game launch or partnership to revive it.' },
+    // 💰 DeFi / Finance
+    { id: 'defi', label: 'DeFi / Finance', emoji: '💰', color: '#10b981',
+      keywords: ['defi','swap','yield','stake','farm','pool','vault','loan','borrow','lend','earn','apy','apr','lp','amm','dex','dao','gov','treasury','protocol','finance','bank','cash','money','coin','fund','invest','trade','market','profit'],
+      temp: 'cold', desc: 'Pure DeFi tokens are less popular on Solana memecoins. Better stick to meme narratives here.' },
+    // 🌍 Cultura BR
+    { id: 'brazil', label: 'Narrativa BR 🇧🇷', emoji: '🇧🇷', color: '#22c55e',
+      keywords: ['br','brasil','brazil','lula','bolsonaro','neymar','copa','selecao','carnaval','favela','real','brl','samba','funk','pix','nubank','itau','xp','rico','touro','urso','caipira','sertanejo','baile'],
+      temp: 'emerging', desc: 'Narrativa brasileira emergindo! O CT brasileiro está crescendo — tokens com referências BR têm comunidade local engajada.' },
+    // 🔥 Meme Puro
+    { id: 'meme', label: 'Pure Meme', emoji: '🔥', color: '#ef4444',
+      keywords: ['meme','chad','based','wen','gm','wagmi','ngmi','gg','lol','wtf','omg','sup','bro','dude','sir','fren','anon','cope','seethe','rekt','ded','moon','pump','dump','rug','gem','100x','1000x','send','it'],
+      temp: 'warm', desc: 'Pure meme tokens live and die by CT attention. High velocity, short lifespan — trade fast or get left behind.' },
+  ];
+
+  // Temperatura atual das narrativas (atualizado manualmente toda semana)
+  // 🔥 hot | 🟡 warm | ❄️ cold | ⚡ volatile | 🌱 emerging
+  const NARRATIVE_TEMPS = {
+    ai:       { label: '🔥 QUENTE',    color: '#ef4444',  score: 95 },
+    animal:   { label: '🟡 MORNA',     color: '#f59e0b',  score: 60 },
+    politics: { label: '⚡ VOLÁTIL',   color: '#f59e0b',  score: 70 },
+    elon:     { label: '🟡 MORNA',     color: '#f59e0b',  score: 55 },
+    space:    { label: '❄️ FRIA',      color: '#64748b',  score: 30 },
+    anime:    { label: '🟡 MORNA',     color: '#f59e0b',  score: 58 },
+    btc:      { label: '🟡 MORNA',     color: '#f59e0b',  score: 65 },
+    gaming:   { label: '❄️ FRIA',      color: '#64748b',  score: 25 },
+    defi:     { label: '❄️ FRIA',      color: '#64748b',  score: 20 },
+    brazil:   { label: '🌱 EMERGINDO', color: '#22c55e',  score: 72 },
+    meme:     { label: '🟡 MORNA',     color: '#f59e0b',  score: 62 },
+  };
+
+  const detectNarrative = (name = '', symbol = '') => {
+    const text = `${name} ${symbol}`.toLowerCase();
+    let best = null;
+    let bestScore = 0;
+
+    NARRATIVE_MAP.forEach(narr => {
+      let score = 0;
+      narr.keywords.forEach(kw => {
+        if (text.includes(kw)) score += kw.length > 4 ? 3 : 1; // palavras longas = match mais forte
+      });
+      if (score > bestScore) { bestScore = score; best = narr; }
+    });
+
+    if (!best || bestScore === 0) return null;
+
+    const temp = NARRATIVE_TEMPS[best.id] || { label: '🟡 MORNA', color: '#f59e0b', score: 50 };
+    return {
+      ...best,
+      tempLabel: temp.label,
+      tempColor: temp.color,
+      tempScore: temp.score,
+      matchScore: bestScore,
+    };
+  };
+
+  // ── API KEYS — substitua no seu editor ──────────────────────────────────────
+  const BIRDEYE_KEY = '373f86dca4704eef853b496d99f5bac5'; // ← cole sua key aqui
+
+  // ── FETCH BIRDEYE: market data + overview do token ───────────────────────────
+  const fetchBirdeye = async (addr) => {
+    try {
+      const [overviewRes, trendingRes] = await Promise.all([
+        fetch(`https://public-api.birdeye.so/defi/token_overview?address=${addr}`, {
+          headers: { 'X-API-KEY': BIRDEYE_KEY, 'x-chain': 'solana' }
+        }),
+        fetch(`https://public-api.birdeye.so/defi/token_trending?sort_by=rank&sort_type=asc&offset=0&limit=20`, {
+          headers: { 'X-API-KEY': BIRDEYE_KEY, 'x-chain': 'solana' }
+        })
+      ]);
+      const overview = overviewRes.ok ? await overviewRes.json() : null;
+      const trending = trendingRes.ok ? await trendingRes.json() : null;
+      return { overview: overview?.data || null, trending: trending?.data?.tokens || [] };
+    } catch (e) {
+      console.warn('Birdeye fetch failed:', e.message);
+      return { overview: null, trending: [] };
+    }
+  };
+
+  // ── FETCH SOLSCAN: top holders do token ──────────────────────────────────────
+  const fetchHolders = async (addr) => {
+    try {
+      const res = await fetch(
+        `https://pro-api.solscan.io/v2.0/token/holders?address=${addr}&page=1&page_size=10`,
+        { headers: { 'token': 'free' } } // Solscan public endpoint
+      );
+      if (!res.ok) throw new Error('solscan error');
+      const data = await res.json();
+      return data?.data?.items || [];
+    } catch {
+      // fallback: tenta endpoint público alternativo
+      try {
+        const res2 = await fetch(`https://api.solscan.io/v2/token/holders?tokenAddress=${addr}&limit=10`);
+        const data2 = await res2.json();
+        return data2?.data?.result || [];
+      } catch {
+        return [];
+      }
+    }
+  };
+
+  // ── FETCH DEXSCREENER TRENDING ────────────────────────────────────────────────
+  const fetchDexTrending = async () => {
+    try {
+      const [boostsRes, latestRes] = await Promise.all([
+        fetch('https://api.dexscreener.com/token-boosts/top/v1'),
+        fetch('https://api.dexscreener.com/token-boosts/latest/v1')
+      ]);
+      const boosts = boostsRes.ok ? await boostsRes.json() : [];
+      const latest = latestRes.ok ? await latestRes.json() : [];
+      const solBoosts = (Array.isArray(boosts) ? boosts : []).filter(t => t.chainId === 'solana');
+      const solLatest = (Array.isArray(latest) ? latest : []).filter(t => t.chainId === 'solana');
+      return [...solBoosts, ...solLatest].slice(0, 40);
+    } catch {
+      return [];
+    }
+  };
+
+  // ── CALCULA TEMPERATURA REAL DA NARRATIVA via trending ────────────────────────
+  const calcNarrativeTemp = (narrative, trendingTokens) => {
+    if (!narrative || !trendingTokens?.length) return null;
+    let matches = 0;
+    trendingTokens.forEach(t => {
+      const text = `${t.tokenAddress || ''} ${t.description || ''}`.toLowerCase();
+      narrative.keywords.forEach(kw => { if (text.includes(kw)) matches++; });
+    });
+    // Percentual de tokens trending que pertencem a essa narrativa
+    const pct = (matches / trendingTokens.length) * 100;
+    if (pct >= 20) return { label: '🔥 QUENTE', color: '#ef4444', score: 90, real: true };
+    if (pct >= 10) return { label: '🔥 AQUECENDO', color: '#f97316', score: 75, real: true };
+    if (pct >= 5)  return { label: '🟡 MORNA', color: '#f59e0b', score: 55, real: true };
+    if (pct >= 2)  return { label: '🧊 ESFRIANDO', color: '#64748b', score: 35, real: true };
+    return { label: '❄️ FRIA', color: '#475569', score: 15, real: true };
+  };
+
   const analyzeToken = async (overrideAddress) => {
     const addr = (typeof overrideAddress === 'string' && overrideAddress) ? overrideAddress : tokenAddress;
     if (!addr) {
@@ -5866,8 +6052,14 @@ function HelmApp() {
     if (typeof overrideAddress === 'string' && overrideAddress) setTokenAddress(overrideAddress);
     setLoading(true);
     try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`);
-      const data = await res.json();
+      // ── Dispara todas as APIs em paralelo ──
+      const [dexRes, birdeyeData, holderList, trendingTokens] = await Promise.all([
+        fetch(`https://api.dexscreener.com/latest/dex/tokens/${addr}`),
+        fetchBirdeye(addr),
+        fetchHolders(addr),
+        fetchDexTrending(),
+      ]);
+      const data = await dexRes.json();
       if (data.pairs && data.pairs.length > 0) {
         const pair = data.pairs[0];
         const tokenData = {
@@ -5974,6 +6166,64 @@ function HelmApp() {
         tokenData.redFlags = redFlags;
         tokenData.greenFlags = greenFlags;
         tokenData.riskLevel = riskScore >= 70 ? 'low' : riskScore >= 50 ? 'medium' : riskScore >= 30 ? 'high' : 'extreme';
+
+        // ── ENRICH COM BIRDEYE ──
+        if (birdeyeData?.overview) {
+          const bde = birdeyeData.overview;
+          if (bde.holder && !tokenData.holders) tokenData.holders = bde.holder;
+          if (bde.numberMarkets) tokenData.markets = bde.numberMarkets;
+          if (bde.uniqueWallet24h) {
+            tokenData.uniqueWallets24h = bde.uniqueWallet24h;
+            if (bde.uniqueWallet24h > 500) greenFlags.push(`✅ ${bde.uniqueWallet24h.toLocaleString()} unique wallets in 24h — strong organic activity`);
+            else if (bde.uniqueWallet24h < 50) { riskScore -= 8; redFlags.push(`⚠️ Only ${bde.uniqueWallet24h} unique wallets in 24h — low interest`); }
+          }
+          if (bde.buy24h && bde.sell24h) {
+            tokenData.buys24h = bde.buy24h;
+            tokenData.sells24h = bde.sell24h;
+          }
+          tokenData.riskScore = Math.max(0, Math.min(100, riskScore));
+        }
+
+        // ── ENRICH COM SOLSCAN HOLDERS ──
+        if (holderList?.length > 0) {
+          // Calcula supply total para % de cada holder
+          const topHolders = holderList.slice(0, 10).map((h, i) => ({
+            rank: i + 1,
+            address: h.address || h.owner || '???',
+            amount: h.amount || h.uiAmount || 0,
+            pct: h.percentage || null,
+          }));
+          tokenData.topHoldersList = topHolders;
+          // Detecta concentração perigosa
+          const top3Pct = topHolders.slice(0, 3).reduce((s, h) => s + (h.pct || 0), 0);
+          if (top3Pct > 50) { riskScore -= 20; redFlags.push(`🚨 Top 3 holders own ${top3Pct.toFixed(0)}% of supply — extreme concentration`); }
+          else if (top3Pct > 30) { riskScore -= 10; redFlags.push(`⚠️ Top 3 holders own ${top3Pct.toFixed(0)}% — high concentration`); }
+          else if (top3Pct < 15 && top3Pct > 0) greenFlags.push(`✅ Top 3 holders own only ${top3Pct.toFixed(0)}% — healthy distribution`);
+          tokenData.riskScore = Math.max(0, Math.min(100, riskScore));
+        }
+
+        // ── NARRATIVE DETECTION COM VALIDAÇÃO REAL ──
+        const narrative = detectNarrative(tokenData.name, tokenData.symbol);
+        tokenData.narrative = narrative;
+        if (narrative) {
+          // Tenta validar com trending real (DexScreener + Birdeye)
+          const allTrending = [
+            ...trendingTokens,
+            ...(birdeyeData?.trending || []).map(t => ({ description: `${t.name} ${t.symbol}`, chainId: 'solana' }))
+          ];
+          const realTemp = calcNarrativeTemp(narrative, allTrending);
+          if (realTemp) {
+            // Usa temperatura real dos dados ao vivo
+            tokenData.narrative = { ...narrative, ...realTemp };
+          }
+          // Ajusta risk score com base na temperatura final
+          const finalScore = tokenData.narrative.tempScore ?? narrative.tempScore ?? 50;
+          if (finalScore >= 80) { riskScore += 8; greenFlags.push(`🔥 Narrative "${narrative.label}" is HOT right now — strong tailwind`); }
+          else if (finalScore >= 60) greenFlags.push(`🟡 Narrative "${narrative.label}" is active — moderate tailwind`);
+          else if (finalScore <= 25) { riskScore -= 10; redFlags.push(`❄️ Narrative "${narrative.label}" is cold — weak market interest`); }
+          tokenData.riskScore = Math.max(0, Math.min(100, riskScore));
+        }
+
         setAnalysis(tokenData);
         showToast('Token analyzed!', 'success');
       } else {
@@ -7904,7 +8154,193 @@ function HelmApp() {
     }
   }, "$", analysis.avgBagUsd.toFixed(0)), /*#__PURE__*/React.createElement("div", {
     className: "stat-label"
-  }, "Avg Bag"))), analysis.redFlags.length > 0 && /*#__PURE__*/React.createElement("div", {
+  }, "Avg Bag"))), 
+
+  // ── NARRATIVE CARD ──
+  analysis.narrative && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '16px',
+      borderRadius: '14px',
+      overflow: 'hidden',
+      border: `1px solid ${analysis.narrative.color}44`,
+      background: `linear-gradient(135deg, ${analysis.narrative.color}12, ${analysis.narrative.color}06)`,
+    }
+  },
+    // Header
+    /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '12px 16px',
+        borderBottom: `1px solid ${analysis.narrative.color}22`,
+      }
+    },
+      /*#__PURE__*/React.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
+        /*#__PURE__*/React.createElement("span", { style: { fontSize: '1.5rem' } }, analysis.narrative.emoji),
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("div", { style: { fontWeight: '800', fontSize: '0.95rem', color: analysis.narrative.color } },
+            analysis.narrative.label
+          ),
+          /*#__PURE__*/React.createElement("div", { style: { fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '1px' } },
+            "🏷️ Narrativa detectada"
+          )
+        )
+      ),
+      /*#__PURE__*/React.createElement("div", {
+        style: {
+          background: `${analysis.narrative.tempColor}22`,
+          border: `1px solid ${analysis.narrative.tempColor}55`,
+          color: analysis.narrative.tempColor,
+          borderRadius: '20px',
+          padding: '4px 12px',
+          fontSize: '0.78rem',
+          fontWeight: '800',
+          letterSpacing: '0.3px',
+        }
+      }, analysis.narrative.tempLabel)
+    ),
+    // Temperatura bar
+    /*#__PURE__*/React.createElement("div", { style: { padding: '12px 16px', borderBottom: `1px solid ${analysis.narrative.color}11` } },
+      /*#__PURE__*/React.createElement("div", {
+        style: { display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '6px' }
+      },
+        /*#__PURE__*/React.createElement("span", null, "❄️ Fria"),
+        /*#__PURE__*/React.createElement("span", { style: { fontWeight: 'bold', color: 'var(--text-primary)' } },
+          "Momentum da Narrativa"
+        ),
+        /*#__PURE__*/React.createElement("span", null, "🔥 Quente")
+      ),
+      /*#__PURE__*/React.createElement("div", {
+        style: { height: '8px', borderRadius: '4px', background: 'var(--bg-hover)', overflow: 'hidden' }
+      },
+        /*#__PURE__*/React.createElement("div", {
+          style: {
+            height: '100%',
+            width: `${analysis.narrative.tempScore}%`,
+            borderRadius: '4px',
+            background: `linear-gradient(90deg, #64748b, ${analysis.narrative.tempColor})`,
+            transition: 'width 1s ease',
+          }
+        })
+      )
+    ),
+    // Descrição
+    /*#__PURE__*/React.createElement("div", { style: { padding: '10px 16px' } },
+      /*#__PURE__*/React.createElement("p", {
+        style: { fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }
+      }, analysis.narrative.desc)
+    )
+  ),
+
+  // ── TOP HOLDERS CARD (Solscan) ──
+  analysis.topHoldersList?.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '14px',
+      borderRadius: '14px',
+      border: '1px solid var(--border)',
+      background: 'var(--bg-card)',
+      overflow: 'hidden',
+    }
+  },
+    /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: '12px 16px',
+        borderBottom: '1px solid var(--border)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }
+    },
+      /*#__PURE__*/React.createElement("div", { style: { fontWeight: '800', fontSize: '0.9rem' } }, "🏦 Top 10 Holders"),
+      analysis.uniqueWallets24h && /*#__PURE__*/React.createElement("div", {
+        style: {
+          background: 'rgba(59,130,246,0.15)',
+          border: '1px solid rgba(59,130,246,0.3)',
+          color: '#3b82f6',
+          borderRadius: '12px',
+          padding: '3px 10px',
+          fontSize: '0.75rem',
+          fontWeight: '700',
+        }
+      }, `👛 ${analysis.uniqueWallets24h.toLocaleString()} wallets/24h`)
+    ),
+    /*#__PURE__*/React.createElement("div", { style: { padding: '8px 0' } },
+      analysis.topHoldersList.map((h, i) => {
+        const pct = h.pct || 0;
+        const isRisky = pct > 10;
+        const isWarning = pct > 5 && !isRisky;
+        const barColor = isRisky ? '#ef4444' : isWarning ? '#f59e0b' : '#3b82f6';
+        const shortAddr = h.address ? `${h.address.slice(0,4)}...${h.address.slice(-4)}` : '???';
+        return /*#__PURE__*/React.createElement("div", {
+          key: i,
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '6px 16px',
+            borderBottom: i < 9 ? '1px solid rgba(148,163,184,0.06)' : 'none',
+          }
+        },
+          // Rank
+          /*#__PURE__*/React.createElement("div", {
+            style: {
+              width: '20px',
+              fontSize: '0.75rem',
+              color: i < 3 ? '#f59e0b' : 'var(--text-secondary)',
+              fontWeight: i < 3 ? '800' : '400',
+              flexShrink: 0,
+            }
+          }, i < 3 ? ['🥇','🥈','🥉'][i] : `#${i+1}`),
+          // Address
+          /*#__PURE__*/React.createElement("div", {
+            style: {
+              fontFamily: 'monospace',
+              fontSize: '0.78rem',
+              color: 'var(--text-secondary)',
+              flex: 1,
+              minWidth: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }
+          }, shortAddr),
+          // Bar + pct
+          pct > 0 && /*#__PURE__*/React.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 } },
+            /*#__PURE__*/React.createElement("div", {
+              style: {
+                width: '60px',
+                height: '5px',
+                borderRadius: '3px',
+                background: 'var(--bg-hover)',
+                overflow: 'hidden',
+              }
+            },
+              /*#__PURE__*/React.createElement("div", {
+                style: {
+                  height: '100%',
+                  width: `${Math.min(pct * 4, 100)}%`,
+                  background: barColor,
+                  borderRadius: '3px',
+                }
+              })
+            ),
+            /*#__PURE__*/React.createElement("div", {
+              style: {
+                fontSize: '0.75rem',
+                fontWeight: '700',
+                color: barColor,
+                width: '36px',
+                textAlign: 'right',
+              }
+            }, `${pct.toFixed(1)}%`)
+          )
+        );
+      })
+    )
+  ),
+
+  analysis.redFlags.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       background: 'rgba(239,68,68,0.08)',
 
