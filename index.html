@@ -5879,80 +5879,145 @@ function HelmApp() {
   const NARRATIVE_MAP = [
     // 🤖 AI / Agents
     { id: 'ai', label: 'AI Agents', emoji: '🤖', color: '#6366f1',
-      keywords: ['ai','gpt','llm','agent','neural','deep','ml','robot','agi','claude','gemini','openai','turbo','sentient','think','brain','mind','compute','algo'],
-      temp: 'hot', desc: 'AI narrative is one of the strongest in crypto right now. Tokens in this meta attract serious capital.' },
+      // Tokens famosos: ai16z, goat, arc, virtual, aixbt, zerebro, lumia, griffain
+      keywords: ['ai','gpt','llm','agent','neural','deep','ml','robot','agi','claude','gemini','openai','turbo','sentient','think','brain','mind','compute','algo',
+                 'ai16z','goat','arc','virtual','aixbt','zerebro','lumia','griffain','eliza','degen','intern','bully','memes','jarvis','skynet','hal9000','turing'],
+      desc: 'AI narrative is one of the strongest in crypto right now. Tokens in this meta attract serious capital from VCs and retail.' },
+
     // 🐸 Animal Memes
     { id: 'animal', label: 'Animal Meme', emoji: '🐸', color: '#10b981',
-      keywords: ['dog','doge','shib','cat','pepe','frog','ape','monkey','bear','bull','wolf','fox','bird','fish','shark','whale','hamster','rat','mouse','goat','sheep','pig','cow','horse','turtle','snake','eagle','owl','lion','tiger','panda','koala','rabbit','bunny','duck','penguin','seal','otter','crab','lobster','bat','bee','ant','fly','worm'],
-      temp: 'warm', desc: 'Animal memes are a classic crypto narrative. Evergreen but very saturated — needs strong community to stand out.' },
-    // 🏛️ Política
-    { id: 'politics', label: 'Político', emoji: '🏛️', color: '#f59e0b',
-      keywords: ['trump','maga','biden','kamala','harris','republican','democrat','vote','elect','president','congress','senate','white house','potus','gop','pol','eua','usa','america','patriot','freedom','liberty','nation','flag','party','lula','bolsonaro','br','brazil','brasil','pt','psol','psd','mdb','pl'],
-      temp: 'volatile', desc: 'Political tokens pump hard around events but crash just as fast. High risk, high reward — very timing-dependent.' },
-    // 🚀 Elon / SpaceX
+      // Tokens famosos: bonk, wif, popcat, moodeng, pnut, myro, nub, bome, wen, billy
+      keywords: ['dog','doge','shib','cat','pepe','frog','ape','monkey','bear','bull','wolf','fox','bird','fish','shark','whale','hamster','rat','mouse',
+                 'goat','sheep','pig','cow','horse','turtle','snake','eagle','owl','lion','tiger','panda','koala','rabbit','bunny','duck','penguin','seal',
+                 'otter','crab','lobster','bat','bee','ant','worm','bonk','wif','popcat','moodeng','pnut','myro','nub','bome','wen','billy','gecko','dino',
+                 'ponke','michi','maneki','pups','pup','kitty','kitten','puppy','doggo','birb','gato','perro','hund','chien','dogwif','catwif','fwog'],
+      desc: 'Animal memes are the classic crypto narrative. Evergreen but saturated — needs strong community to stand out from thousands of competitors.' },
+
+    // 🏛️ Política / Presidents
+    { id: 'politics', label: 'Political', emoji: '🏛️', color: '#f59e0b',
+      // Tokens famosos: trump, maga, boden, jeo, jup, melania
+      keywords: ['trump','maga','biden','kamala','harris','republican','democrat','vote','elect','president','congress','senate','potus','gop',
+                 'america','patriot','freedom','liberty','nation','flag','party','lula','bolsonaro','brasil','melania','boden','jeo boden',
+                 'obema','doland','tremp','cheeto','dictator','sleepy','brandon','lets go','dark brandon','drumpf','desantis','rfk','vivek',
+                 'javier','milei','putin','xi','zelensky','modi','macron','farage','boris','sunak'],
+      desc: 'Political tokens pump hard around elections and major events but crash just as fast. Very timing-dependent — need a catalyst.' },
+
+    // 🚀 Elon Universe
     { id: 'elon', label: 'Elon Universe', emoji: '🚀', color: '#3b82f6',
-      keywords: ['elon','musk','spacex','tesla','neuralink','doge','x.com','boring','starship','mars','xai','grok','twitter','xmusk'],
-      temp: 'warm', desc: 'Elon-related tokens move with his tweets. Watch his X activity — one post can 10x or kill a token overnight.' },
-    // 🌙 Space / Moon
-    { id: 'space', label: 'Space & Moon', emoji: '🌙', color: '#a855f7',
-      keywords: ['moon','space','astro','galaxy','star','cosmos','orbit','rocket','comet','meteor','saturn','jupiter','mars','pluto','sun','lunar','nova','nebula','void','dark','black hole','alien','ufo','et','nasa'],
-      temp: 'cold', desc: 'Space narrative is quiet right now. Could revive with a major SpaceX event or NASA news.' },
-    // 🎌 Anime / Ásia
-    { id: 'anime', label: 'Anime / Ásia', emoji: '🎌', color: '#ec4899',
-      keywords: ['anime','manga','otaku','japan','ninja','samurai','katana','sakura','neko','waifu','goku','naruto','one piece','dragon','demon','sword','blade','ronin','shogun','tokyo','osaka','china','korea','bao','yen','zen','tao','kung','panda'],
-      temp: 'warm', desc: 'Anime meta has a loyal community. Tokens with strong anime branding tend to keep holders longer.' },
-    // 💎 Bitcoin Culture
-    { id: 'btc', label: 'Bitcoin Culture', emoji: '₿', color: '#f59e0b',
-      keywords: ['btc','bitcoin','sat','satoshi','nakamoto','hodl','hal','finney','genesis','block','halving','mining','hash','pow','lightning','taproot','ordinal','inscription','rune','brc'],
-      temp: 'warm', desc: 'BTC-adjacent tokens often pump during Bitcoin bull runs when capital overflows from BTC into alts.' },
-    // 🎮 Gaming / Metaverso
-    { id: 'gaming', label: 'Gaming / Meta', emoji: '🎮', color: '#06b6d4',
-      keywords: ['game','play','quest','hero','legend','pixel','craft','realm','world','land','meta','verse','virtual','arena','guild','clan','raid','loot','nft','item','sword','shield','magic','spell','dungeon','castle','king','queen','knight','warrior','wizard'],
-      temp: 'cold', desc: 'Gaming narrative is currently cold. Waiting for a major game launch or partnership to revive it.' },
-    // 💰 DeFi / Finance
-    { id: 'defi', label: 'DeFi / Finance', emoji: '💰', color: '#10b981',
-      keywords: ['defi','swap','yield','stake','farm','pool','vault','loan','borrow','lend','earn','apy','apr','lp','amm','dex','dao','gov','treasury','protocol','finance','bank','cash','money','coin','fund','invest','trade','market','profit'],
-      temp: 'cold', desc: 'Pure DeFi tokens are less popular on Solana memecoins. Better stick to meme narratives here.' },
-    // 🌍 Cultura BR
-    { id: 'brazil', label: 'Narrativa BR 🇧🇷', emoji: '🇧🇷', color: '#22c55e',
-      keywords: ['br','brasil','brazil','lula','bolsonaro','neymar','copa','selecao','carnaval','favela','real','brl','samba','funk','pix','nubank','itau','xp','rico','touro','urso','caipira','sertanejo','baile'],
-      temp: 'emerging', desc: 'Narrativa brasileira emergindo! O CT brasileiro está crescendo — tokens com referências BR têm comunidade local engajada.' },
-    // 🔥 Meme Puro
+      // Tokens famosos: doge, grok, xai, based
+      keywords: ['elon','musk','spacex','tesla','neuralink','boring','starship','grok','xai','twitter','x.com','xmusk','elonmusk',
+                 'elongate','elona','dogefather','420','sigma','technoking','mars','hyperloop','flamethrower','tunnels'],
+      desc: 'Elon-related tokens move with his tweets. One post can 10x or kill a token overnight. Follow his X activity closely.' },
+
+    // 🎭 Celebrity / Pop Culture
+    { id: 'celebrity', label: 'Celebrity / Pop', emoji: '🎭', color: '#ec4899',
+      // Tokens famosos: hawk tuah, peanut, fartcoin, giga, sigma
+      keywords: ['hawk','tuah','haliey','hawk tuah','peanut','fartcoin','giga','gigachad','sigma','andrew tate','tate','adin','ross',
+                 'speed','ishowspeed','kai cenat','drake','taylor','swift','kanye','ye','rihanna','beyonce','lady gaga','eminem','snoop',
+                 'ice cube','lil','nicki','cardi','offset','travis','scott','migos','21 savage','gunna','future','weeknd','bad bunny',
+                 'ozzy','cobain','kurt','tupac','biggie','pac','nas','jay','kendrick','lamar','biebs','bieber','justin','ariana','selena',
+                 'miley','britney','paris','hilton','kim','kardashian','kylie','jenner','bella','hadid','zendaya','timothee'],
+      desc: 'Celebrity tokens live and die by their muse. One mention from the real person can 50x. Without that, they fade fast.' },
+
+    // 🔥 Pure Meme / CT Culture
     { id: 'meme', label: 'Pure Meme', emoji: '🔥', color: '#ef4444',
-      keywords: ['meme','chad','based','wen','gm','wagmi','ngmi','gg','lol','wtf','omg','sup','bro','dude','sir','fren','anon','cope','seethe','rekt','ded','moon','pump','dump','rug','gem','100x','1000x','send','it'],
-      temp: 'warm', desc: 'Pure meme tokens live and die by CT attention. High velocity, short lifespan — trade fast or get left behind.' },
+      // Tokens famosos: slerf, bome, fwog, michi, gme, rug, cope
+      keywords: ['meme','chad','based','wen','gm','wagmi','ngmi','lol','wtf','bro','fren','anon','cope','seethe','rekt','ded','send',
+                 'slerf','fwog','gme','rug','ngmi','degen','ape','alpha','beta','chad','wojak','npc','bobo','cobie','ansem','murad',
+                 'normie','pleb','gigabrain','midwit','retard','smooth','brain','200iq','mooning','dumping','crabbing','chopping',
+                 'safu','ngmi','lfg','iykyk','ser','gm','gn','gg','ez','kek','lmao','bruh','lowkey','ngl','fr','no cap','based'],
+      desc: 'Pure CT meme tokens live on attention and irony. High velocity, short lifespan — trade fast or get left behind.' },
+
+    // 🌙 Space / Cosmic
+    { id: 'space', label: 'Space & Cosmos', emoji: '🌙', color: '#a855f7',
+      keywords: ['moon','space','astro','galaxy','star','cosmos','orbit','rocket','comet','meteor','saturn','pluto','sun','lunar',
+                 'nova','nebula','void','alien','ufo','nasa','iss','webb','hubble','apollo','gemini','orion','andromeda','milky',
+                 'quasar','pulsar','wormhole','blackhole','darkstar','constellation','zodiac','eclipse'],
+      desc: 'Space narrative is currently quiet. Can revive explosively with SpaceX launches or NASA news — keep an eye on the calendar.' },
+
+    // 🎌 Anime / Ásia
+    { id: 'anime', label: 'Anime / Asia', emoji: '🎌', color: '#f472b6',
+      // Tokens famosos: maneki, michi, oshi, neko
+      keywords: ['anime','manga','otaku','japan','ninja','samurai','katana','sakura','neko','waifu','goku','naruto','dragon ball',
+                 'one piece','bleach','demon slayer','jujutsu','attack on titan','aot','jojo','evangelion','pokemon','pikachu',
+                 'charizard','eevee','snorlax','gengar','mewtwo','oshi','maneki','michi','lucky cat','torii','fujisan','fuji',
+                 'ronin','shogun','daimyo','tokyo','osaka','kyoto','korea','kpop','bts','blackpink','china','panda','baozi'],
+      desc: 'Anime meta has a loyal and passionate community. Strong branding tends to keep holders much longer than generic memes.' },
+
+    // ₿ Bitcoin Culture
+    { id: 'btc', label: 'Bitcoin Culture', emoji: '₿', color: '#f59e0b',
+      keywords: ['btc','bitcoin','sat','satoshi','nakamoto','hodl','hal','finney','genesis','halving','mining','hash','pow',
+                 'lightning','taproot','ordinal','inscription','rune','brc','maxi','pleb','laser eyes','digital gold',
+                 'store of value','number go up','nguu','stacking sats','21 million'],
+      desc: 'BTC-adjacent tokens often pump during Bitcoin bull runs when capital overflows from BTC holders looking for higher beta.' },
+
+    // 🎮 Gaming
+    { id: 'gaming', label: 'Gaming', emoji: '🎮', color: '#06b6d4',
+      keywords: ['game','play','quest','hero','legend','pixel','craft','realm','world','land','verse','virtual','arena',
+                 'guild','clan','raid','loot','nft','sword','shield','magic','spell','dungeon','castle','king','warrior',
+                 'wizard','mmorpg','rpg','fps','pvp','pve','grind','respawn','gg','esport','twitch','streamer','gamer',
+                 'minecraft','fortnite','roblox','steam','nintendo','xbox','playstation','ps5','controller','joystick'],
+      desc: 'Gaming narrative is cold right now. Waiting for a major AAA game to integrate crypto or a big gaming collab.' },
+
+    // 💰 DeFi
+    { id: 'defi', label: 'DeFi', emoji: '💰', color: '#10b981',
+      keywords: ['defi','swap','yield','stake','farm','pool','vault','loan','borrow','lend','earn','apy','apr','lp','amm',
+                 'dex','dao','gov','treasury','protocol','finance','bank','cash','fund','rebase','elastic','algo','stable'],
+      desc: 'Pure DeFi tokens are less popular as memecoins on Solana. Better traction in narrative-driven meme tokens here.' },
+
+    // 🇧🇷 Cultura BR
+    { id: 'brazil', label: 'Narrativa BR 🇧🇷', emoji: '🇧🇷', color: '#22c55e',
+      keywords: ['br','brasil','brazil','lula','bolsonaro','neymar','copa','selecao','carnaval','favela','real','brl','samba',
+                 'funk','pix','nubank','caipira','sertanejo','baile','churrasco','festa','povo','patria','verde','amarelo',
+                 'flamengo','corinthians','palmeiras','santos','gremio','cruzeiro','atletico','vasco','botafogo','sport'],
+      desc: 'Narrativa brasileira emergindo! CT brasileiro cresce rápido — tokens com referências BR têm comunidade local muito engajada.' },
   ];
 
-  // Temperatura atual das narrativas (atualizado manualmente toda semana)
-  // 🔥 hot | 🟡 warm | ❄️ cold | ⚡ volatile | 🌱 emerging
   const NARRATIVE_TEMPS = {
-    ai:       { label: '🔥 QUENTE',    color: '#ef4444',  score: 95 },
-    animal:   { label: '🟡 MORNA',     color: '#f59e0b',  score: 60 },
-    politics: { label: '⚡ VOLÁTIL',   color: '#f59e0b',  score: 70 },
-    elon:     { label: '🟡 MORNA',     color: '#f59e0b',  score: 55 },
-    space:    { label: '❄️ FRIA',      color: '#64748b',  score: 30 },
-    anime:    { label: '🟡 MORNA',     color: '#f59e0b',  score: 58 },
-    btc:      { label: '🟡 MORNA',     color: '#f59e0b',  score: 65 },
-    gaming:   { label: '❄️ FRIA',      color: '#64748b',  score: 25 },
-    defi:     { label: '❄️ FRIA',      color: '#64748b',  score: 20 },
-    brazil:   { label: '🌱 EMERGINDO', color: '#22c55e',  score: 72 },
-    meme:     { label: '🟡 MORNA',     color: '#f59e0b',  score: 62 },
+    ai:        { label: '🔥 QUENTE',    color: '#ef4444',  score: 95 },
+    animal:    { label: '🟡 MORNA',     color: '#f59e0b',  score: 62 },
+    politics:  { label: '⚡ VOLATILE',   color: '#f59e0b',  score: 68 },
+    elon:      { label: '🟡 MORNA',     color: '#f59e0b',  score: 55 },
+    celebrity: { label: '🔥 QUENTE',    color: '#ef4444',  score: 80 },
+    meme:      { label: '🟡 MORNA',     color: '#f59e0b',  score: 65 },
+    space:     { label: '❄️ FRIA',      color: '#64748b',  score: 28 },
+    anime:     { label: '🟡 MORNA',     color: '#f59e0b',  score: 60 },
+    btc:       { label: '🟡 MORNA',     color: '#f59e0b',  score: 65 },
+    gaming:    { label: '❄️ FRIA',      color: '#64748b',  score: 22 },
+    defi:      { label: '❄️ FRIA',      color: '#64748b',  score: 18 },
+    brazil:    { label: '🌱 EMERGINDO', color: '#22c55e',  score: 72 },
   };
 
-  const detectNarrative = (name = '', symbol = '') => {
-    const text = `${name} ${symbol}`.toLowerCase();
+  // Detecta narrativa usando: nome + symbol + descrição do Birdeye/DexScreener
+  const detectNarrative = (name = '', symbol = '', description = '') => {
+    // Combina todas as fontes de texto disponíveis
+    const text = `${name} ${symbol} ${description}`.toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ') // remove pontuação
+      .replace(/\s+/g, ' ')
+      .trim();
+
     let best = null;
     let bestScore = 0;
 
     NARRATIVE_MAP.forEach(narr => {
       let score = 0;
       narr.keywords.forEach(kw => {
-        if (text.includes(kw)) score += kw.length > 4 ? 3 : 1; // palavras longas = match mais forte
+        const kwClean = kw.toLowerCase();
+        // Match exato de palavra (evita "cat" dar match em "education")
+        const regex = new RegExp(`(^|\\s|\\b)${kwClean.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}(\\s|$|\\b)`, 'i');
+        if (regex.test(text)) {
+          // Pontuação: palavras mais longas e específicas valem mais
+          if (kwClean.length >= 8) score += 5;       // muito específica (ex: "gigachad")
+          else if (kwClean.length >= 5) score += 3;  // específica (ex: "trump")
+          else if (kwClean.length >= 3) score += 2;  // média (ex: "dog")
+          else score += 1;                            // curta (ex: "ai")
+        }
       });
       if (score > bestScore) { bestScore = score; best = narr; }
     });
 
-    if (!best || bestScore === 0) return null;
+    // Mínimo de score 2 para evitar matches acidentais por palavras curtas
+    if (!best || bestScore < 2) return null;
 
     const temp = NARRATIVE_TEMPS[best.id] || { label: '🟡 MORNA', color: '#f59e0b', score: 50 };
     return {
@@ -5961,8 +6026,10 @@ function HelmApp() {
       tempColor: temp.color,
       tempScore: temp.score,
       matchScore: bestScore,
+      confidence: bestScore >= 8 ? 'high' : bestScore >= 4 ? 'medium' : 'low',
     };
   };
+
 
   // ── API KEYS — substitua no seu editor ──────────────────────────────────────
   const BIRDEYE_KEY = '373f86dca4704eef853b496d99f5bac5'; // ← cole sua key aqui
@@ -6177,7 +6244,7 @@ function HelmApp() {
         // 9. TOP HOLDER CONCENTRAÇÃO
         if (tokenData.topHolderPct > 0) {
           if      (tokenData.topHolderPct > 20) { riskScore -= 30; redFlags.push(`🚨 Top holder owns ${tokenData.topHolderPct.toFixed(1)}% — dev/insider can rug anytime`); }
-          else if (tokenData.topHolderPct > 10) { riskScore -= 22; redFlags.push(`🚨 Top holder owns ${tokenData.topHolderPct.toFixed(1)}% — very dangerous`); }
+          else if (tokenData.topHolderPct > 10) { riskScore -= 22; redFlags.push(`🚨 Top holder owns ${tokenData.topHolderPct.toFixed(1)}% — very dangerous concentration`); }
           else if (tokenData.topHolderPct > 5)  { riskScore -= 12; redFlags.push(`⚠️ Top holder ${tokenData.topHolderPct.toFixed(1)}% — above safe threshold`); }
           else if (tokenData.topHolderPct > 3)  { riskScore -= 5;  redFlags.push(`⚠️ Top holder ${tokenData.topHolderPct.toFixed(1)}% — watch this wallet`); }
           else if (tokenData.topHolderPct <= 2) { riskScore += 8;  greenFlags.push(`✅ Top holder only ${tokenData.topHolderPct.toFixed(1)}% — excellent distribution`); }
@@ -6188,7 +6255,7 @@ function HelmApp() {
         const sells = tokenData.txns24h?.sells || 0;
         const totalTxns = buys + sells;
         if      (totalTxns < 5)   { riskScore -= 20; redFlags.push('🚨 Less than 5 transactions in 24h — ghost token'); }
-        else if (totalTxns < 20)  { riskScore -= 12; redFlags.push('⚠️ Very few transactions (< 20/24h)'); }
+        else if (totalTxns < 20)  { riskScore -= 12; redFlags.push('⚠️ Very few transactions (< 20 in 24h)'); }
         else if (totalTxns > 500) { riskScore += 10; greenFlags.push('✅ Very active trading (500+ txns/24h)'); }
         else if (totalTxns > 100) { riskScore += 5;  greenFlags.push('✅ Active trading (100+ txns/24h)'); }
         if (sells > 0 && buys/sells < 0.5)      { riskScore -= 15; redFlags.push('🚨 Strong sell pressure — possible dump in progress'); }
@@ -6276,7 +6343,11 @@ function HelmApp() {
         }
 
         // ── NARRATIVE DETECTION COM VALIDAÇÃO REAL ──
-        const narrative = detectNarrative(tokenData.name, tokenData.symbol);
+        const birdeyeDesc = birdeyeData?.overview?.extensions?.description || 
+                            birdeyeData?.overview?.description || '';
+        const dexDesc = pair.info?.description || '';
+        const fullDesc = `${birdeyeDesc} ${dexDesc}`.trim();
+        const narrative = detectNarrative(tokenData.name, tokenData.symbol, fullDesc);
         tokenData.narrative = narrative;
         if (narrative) {
           // Tenta validar com trending real (DexScreener + Birdeye)
@@ -8230,7 +8301,7 @@ function HelmApp() {
   }, "Avg Bag"))), 
 
   // ── NARRATIVE CARD ──
-  analysis.narrative && /*#__PURE__*/React.createElement("div", {
+  analysis.narrative ? /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: '16px',
       borderRadius: '14px',
@@ -8256,7 +8327,10 @@ function HelmApp() {
             analysis.narrative.label
           ),
           /*#__PURE__*/React.createElement("div", { style: { fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '1px' } },
-            "🏷️ Narrativa detectada"
+            "🏷️ Narrative detected",
+            analysis.narrative.confidence === 'high' && " · ✅ High confidence",
+            analysis.narrative.confidence === 'medium' && " · 🟡 Medium confidence",
+            analysis.narrative.confidence === 'low' && " · ⚠️ Low confidence"
           )
         )
       ),
@@ -8303,6 +8377,25 @@ function HelmApp() {
       /*#__PURE__*/React.createElement("p", {
         style: { fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }
       }, analysis.narrative.desc)
+    )
+  ) : /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '14px',
+      borderRadius: '14px',
+      border: '1px solid var(--border)',
+      background: 'var(--bg-card)',
+      padding: '14px 16px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+    }
+  },
+    /*#__PURE__*/React.createElement("span", { style: { fontSize: '1.4rem' } }, "❓"),
+    /*#__PURE__*/React.createElement("div", null,
+      /*#__PURE__*/React.createElement("div", { style: { fontWeight: '700', fontSize: '0.9rem' } }, "Narrative not identified"),
+      /*#__PURE__*/React.createElement("div", { style: { fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' } },
+        "No clear cultural narrative detected. May be a new project without defined meta — adds risk."
+      )
     )
   ),
 
