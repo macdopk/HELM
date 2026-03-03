@@ -101,6 +101,51 @@
             to { transform: rotate(360deg); }
         }
         
+        @keyframes ticker-scroll {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .ticker-wrap {
+          overflow: hidden;
+          background: rgba(0,0,0,0.5);
+          border-bottom: 1px solid rgba(255,255,255,0.07);
+          height: 34px;
+          display: flex;
+          align-items: center;
+        }
+        .ticker-track {
+          display: flex;
+          flex-direction: row;
+          flex-wrap: nowrap;
+          align-items: center;
+          white-space: nowrap;
+          animation: ticker-scroll 35s linear infinite;
+          will-change: transform;
+        }
+        .ticker-wrap:hover .ticker-track { animation-play-state: paused; }
+        .ticker-item {
+          display: inline-flex;
+          flex-shrink: 0;
+          align-items: center;
+          gap: 5px;
+          padding: 0 18px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          border-right: 1px solid rgba(255,255,255,0.07);
+          cursor: pointer;
+          height: 34px;
+          white-space: nowrap;
+        }
+        .ticker-item:hover { background: rgba(255,255,255,0.05); }
+        .trend-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+        .trend-table th { color:var(--text-secondary); font-size:0.7rem; font-weight:600; letter-spacing:0.5px; padding:8px 10px; text-align:right; border-bottom:1px solid var(--border); white-space:nowrap; }
+        .trend-table th:first-child { text-align:left; }
+        .trend-table td { padding:10px 10px; border-bottom:1px solid rgba(255,255,255,0.04); text-align:right; white-space:nowrap; }
+        .trend-table td:first-child { text-align:left; }
+        .trend-table tr:hover td { background:rgba(255,255,255,0.03); cursor:pointer; }
+        .pc-up { color:#22c55e; font-weight:700; }
+        .pc-dn { color:#ef4444; font-weight:700; }
+        .pc-nu { color:var(--text-secondary); }
         @keyframes levelUp {
             0% { transform: scale(0.8); opacity: 0; }
             50% { transform: scale(1.1); }
@@ -4739,6 +4784,10 @@ function HelmApp() {
   const [activeTab, setActiveTab] = useState('profile');
   const [tokenAddress, setTokenAddress] = useState('');
   const [analysis, setAnalysis] = useState(null);
+  const [trendingList, setTrendingList] = useState([]);
+  const [tickerTokens, setTickerTokens] = useState([]);
+  const [trendingLoading, setTrendingLoading] = useState(false);
+  const [trendingLoaded, setTrendingLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [theme, setTheme] = useState('default');
   const [toast, setToast] = useState(null);
@@ -5952,13 +6001,6 @@ function HelmApp() {
                  'store of value','number go up','nguu','stacking sats','21 million'],
       desc: 'BTC-adjacent tokens often pump during Bitcoin bull runs when capital overflows from BTC holders looking for higher beta.' },
 
-    // 🎮 Gaming
-    { id: 'gaming', label: 'Gaming', emoji: '🎮', color: '#06b6d4',
-      keywords: ['game','play','quest','hero','legend','pixel','craft','realm','world','land','verse','virtual','arena',
-                 'guild','clan','raid','loot','nft','sword','shield','magic','spell','dungeon','castle','king','warrior',
-                 'wizard','mmorpg','rpg','fps','pvp','pve','grind','respawn','gg','esport','twitch','streamer','gamer',
-                 'minecraft','fortnite','roblox','steam','nintendo','xbox','playstation','ps5','controller','joystick'],
-      desc: 'Gaming narrative is cold right now. Waiting for a major AAA game to integrate crypto or a big gaming collab.' },
 
     // 💰 DeFi
     { id: 'defi', label: 'DeFi', emoji: '💰', color: '#10b981',
@@ -5975,18 +6017,17 @@ function HelmApp() {
   ];
 
   const NARRATIVE_TEMPS = {
-    ai:        { label: '🔥 QUENTE',    color: '#ef4444',  score: 95 },
-    animal:    { label: '🟡 MORNA',     color: '#f59e0b',  score: 62 },
+    ai:        { label: '🔥 HOT',    color: '#ef4444',  score: 95 },
+    animal:    { label: '🟡 WARM',     color: '#f59e0b',  score: 62 },
     politics:  { label: '⚡ VOLATILE',   color: '#f59e0b',  score: 68 },
-    elon:      { label: '🟡 MORNA',     color: '#f59e0b',  score: 55 },
-    celebrity: { label: '🔥 QUENTE',    color: '#ef4444',  score: 80 },
-    meme:      { label: '🟡 MORNA',     color: '#f59e0b',  score: 65 },
-    space:     { label: '❄️ FRIA',      color: '#64748b',  score: 28 },
-    anime:     { label: '🟡 MORNA',     color: '#f59e0b',  score: 60 },
-    btc:       { label: '🟡 MORNA',     color: '#f59e0b',  score: 65 },
-    gaming:    { label: '❄️ FRIA',      color: '#64748b',  score: 22 },
-    defi:      { label: '❄️ FRIA',      color: '#64748b',  score: 18 },
-    brazil:    { label: '🌱 EMERGINDO', color: '#22c55e',  score: 72 },
+    elon:      { label: '🟡 WARM',     color: '#f59e0b',  score: 55 },
+    celebrity: { label: '🔥 HOT',    color: '#ef4444',  score: 80 },
+    meme:      { label: '🟡 WARM',     color: '#f59e0b',  score: 65 },
+    space:     { label: '❄️ COLD',      color: '#64748b',  score: 28 },
+    anime:     { label: '🟡 WARM',     color: '#f59e0b',  score: 60 },
+    btc:       { label: '🟡 WARM',     color: '#f59e0b',  score: 65 },
+    defi:      { label: '❄️ COLD',      color: '#64748b',  score: 18 },
+    brazil:    { label: '🌱 EMERGING', color: '#22c55e',  score: 72 },
   };
 
   // Detecta narrativa usando: nome + symbol + descrição do Birdeye/DexScreener
@@ -6020,7 +6061,7 @@ function HelmApp() {
     // Mínimo de score 2 para evitar matches acidentais por palavras curtas
     if (!best || bestScore < 2) return null;
 
-    const temp = NARRATIVE_TEMPS[best.id] || { label: '🟡 MORNA', color: '#f59e0b', score: 50 };
+    const temp = NARRATIVE_TEMPS[best.id] || { label: '🟡 WARM', color: '#f59e0b', score: 50 };
     return {
       ...best,
       tempLabel: temp.label,
@@ -6133,6 +6174,15 @@ function HelmApp() {
       +     '<span style="font-size:0.65rem;color:#475569;">100 - Safe</span>'
       +   '</div>'
       + '</div>'
+      + (analysis.verdict ? (
+          '<div style="margin:0 24px 20px;border-radius:10px;border:1px solid ' + analysis.verdict.color + '44;background:' + analysis.verdict.color + '0d;overflow:hidden;">'
+        + '<div style="padding:8px 14px;background:' + analysis.verdict.color + '18;border-bottom:1px solid ' + analysis.verdict.color + '33;">'
+        + '<span style="font-weight:900;font-size:0.7rem;letter-spacing:1.5px;color:' + analysis.verdict.color + ';text-transform:uppercase;">'
+        + analysis.verdict.emoji + ' HELM SAYS - ' + analysis.verdict.label
+        + '</span></div>'
+        + '<div style="padding:10px 14px;font-size:0.78rem;color:#e2e8f0;line-height:1.6;">' + analysis.verdict.text + '</div>'
+        + '</div>'
+        ) : '')
       + '<div style="background:#020617;padding:14px 32px;display:flex;justify-content:space-between;align-items:center;">'
       +   '<div style="display:flex;align-items:center;gap:8px;">'
       +     '<div style="width:24px;height:24px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;">&#9875;</div>'
@@ -6238,11 +6288,163 @@ function HelmApp() {
     });
     // Percentual de tokens trending que pertencem a essa narrativa
     const pct = (matches / trendingTokens.length) * 100;
-    if (pct >= 20) return { label: '🔥 QUENTE', color: '#ef4444', score: 90, real: true };
-    if (pct >= 10) return { label: '🔥 AQUECENDO', color: '#f97316', score: 75, real: true };
-    if (pct >= 5)  return { label: '🟡 MORNA', color: '#f59e0b', score: 55, real: true };
-    if (pct >= 2)  return { label: '🧊 ESFRIANDO', color: '#64748b', score: 35, real: true };
-    return { label: '❄️ FRIA', color: '#475569', score: 15, real: true };
+    if (pct >= 20) return { label: '🔥 HOT', color: '#ef4444', score: 90, real: true };
+    if (pct >= 10) return { label: '🔥 HEATING', color: '#f97316', score: 75, real: true };
+    if (pct >= 5)  return { label: '🟡 WARM', color: '#f59e0b', score: 55, real: true };
+    if (pct >= 2)  return { label: '🧊 COOLING', color: '#64748b', score: 35, real: true };
+    return { label: '❄️ COLD', color: '#475569', score: 15, real: true };
+  };
+
+  // ── FETCH TRENDING ──────────────────────────────────────────────────────────
+  const loadTrendingTab = async () => {
+    if (trendingLoading) return;
+    setTrendingLoading(true);
+    try {
+      const [r1, r2] = await Promise.all([
+        fetch('https://api.dexscreener.com/token-boosts/top/v1'),
+        fetch('https://api.dexscreener.com/token-boosts/latest/v1'),
+      ]);
+      const d1 = r1.ok ? await r1.json() : [];
+      const d2 = r2.ok ? await r2.json() : [];
+      const all = [...(Array.isArray(d1)?d1:[]), ...(Array.isArray(d2)?d2:[])].filter(t=>t.chainId==='solana');
+      const seen = new Set();
+      const unique = all.filter(t => { if(!t.tokenAddress||seen.has(t.tokenAddress))return false; seen.add(t.tokenAddress); return true; });
+      const top20 = unique.slice(0, 20);
+      const addrs = top20.map(t=>t.tokenAddress).join(',');
+      let enriched = top20.map(t=>({...t, name: t.description||t.tokenAddress.slice(0,8), symbol:'???', pc24h:0, mc:0, liq:0, vol24h:0}));
+      try {
+        const dr = await fetch('https://api.dexscreener.com/latest/dex/tokens/'+addrs);
+        const dd = dr.ok ? await dr.json() : null;
+        if (dd && dd.pairs) {
+          const pm = {};
+          dd.pairs.forEach(p => { if(p.baseToken?.address && !pm[p.baseToken.address]) pm[p.baseToken.address]=p; });
+          enriched = top20.map(t => {
+            const p = pm[t.tokenAddress];
+            return {
+              ...t,
+              name:    p?.baseToken?.name   || t.description || t.tokenAddress.slice(0,8),
+              symbol:  p?.baseToken?.symbol || '???',
+              pc24h:   parseFloat(p?.priceChange?.h24) || 0,
+              pc1h:    parseFloat(p?.priceChange?.h1)  || 0,
+              mc:      p?.marketCap         || 0,
+              liq:     p?.liquidity?.usd    || 0,
+              vol24h:  p?.volume?.h24       || 0,
+              narrative: detectNarrative(p?.baseToken?.name||'', p?.baseToken?.symbol||'', p?.info?.description||''),
+            };
+          });
+        }
+      } catch(e){ console.warn(e); }
+      setTrendingList(enriched);
+      setTickerTokens(enriched.slice(0, 15));
+      setTrendingLoaded(true);
+    } catch(e) { showToast('Error loading trending','error'); }
+    finally { setTrendingLoading(false); }
+  };
+
+  React.useEffect(() => { if(activeTab==='trending' && !trendingLoaded) loadTrendingTab(); }, [activeTab]);
+
+  // ── HELM SAYS: gera veredicto em linguagem humana ────────────────────────────
+  const generateVerdict = (t) => {
+    const score   = t.riskScore || 0;
+    const red     = t.redFlags  || [];
+    const green   = t.greenFlags|| [];
+    const pc1h    = t.priceChange1h  || 0;
+    const pc6h    = t.priceChange6h  || 0;
+    const pc24h   = t.priceChange24h || 0;
+    const liq     = t.liquidity  || 0;
+    const vol     = t.volume24h  || 0;
+    const mc      = t.marketCap  || 0;
+    const holders = t.holders    || 0;
+    const ageDays = t.pairCreatedAt ? (Date.now() - t.pairCreatedAt) / 86400000 : null;
+    const buys    = t.txns24h?.buys  || 0;
+    const sells   = t.txns24h?.sells || 0;
+    const volMc   = mc > 0 ? vol / mc : 0;
+    const top3    = (t.topHoldersList || []).slice(0,3).reduce((s,h) => s + (h.pct||0), 0);
+
+    // ── Detecta padrões específicos ──────────────────────────────────────────
+    const isNewToken    = ageDays !== null && ageDays < 3;
+    const isFreshToken  = ageDays !== null && ageDays < 7;
+    const isPumping     = pc1h > 30 && pc6h > 20;
+    const isPumpedOut   = pc24h > 150;
+    const isDumping     = pc24h < -40;
+    const isLowLiq      = liq < 30000;
+    const isHighConc    = top3 > 40;
+    const isWashTrading = volMc > 5;
+    const isBullish     = buys > sells * 1.5 && buys > 20;
+    const isDeadVol     = vol < 5000;
+    const hasNoSocials  = !t.links?.telegram && !t.links?.twitter && !t.links?.website;
+    const hasFullSocial = t.links?.telegram && t.links?.twitter;
+    const narrativeHot  = t.narrative?.tempScore >= 80;
+    const narrativeCold = t.narrative?.tempScore <= 25;
+
+    // ── Casos especiais primeiro (mais graves) ───────────────────────────────
+
+    // Rug clássico
+    if (score < 25) {
+      if (isNewToken && isHighConc)
+        return { emoji: '☠️', label: 'LIKELY RUG', color: '#ef4444',
+          text: 'Classic rug setup. New token with heavy wallet concentration — team can dump at any time. Avoid.' };
+      if (isNewToken && hasNoSocials && isLowLiq)
+        return { emoji: '☠️', label: 'LIKELY RUG', color: '#ef4444',
+          text: 'Anonymous team, no socials, thin liquidity. This is what rugs look like before they happen. Do not enter.' };
+      if (isWashTrading)
+        return { emoji: '🤖', label: 'BOT ACTIVITY', color: '#ef4444',
+          text: 'Volume is artificially inflated. Real traders are not buying this — bots are recycling transactions to fake interest. Avoid.' };
+      return { emoji: '🚨', label: 'EXTREME RISK', color: '#ef4444',
+        text: 'Too many red flags stacked together. Risk is too high regardless of the narrative. Pass on this one.' };
+    }
+
+    // Token já morreu
+    if (isDeadVol && holders < 100)
+      return { emoji: '💀', label: 'DEAD TOKEN', color: '#64748b',
+        text: 'Near-zero volume and very few holders. This token has no active community. Capital has already left.' };
+
+    // Token bombeando — provavelmente tarde demais
+    if (isPumpedOut && score < 60)
+      return { emoji: '⚠️', label: 'LATE ENTRY', color: '#f59e0b',
+        text: `Token already up ${pc24h.toFixed(0)}% in 24h with a weak risk score. You are likely buying the top. Wait for a significant pullback or skip.` };
+
+    if (isPumping && pc24h > 80)
+      return { emoji: '⚡', label: 'FOMO ZONE', color: '#f97316',
+        text: `Up ${pc1h.toFixed(0)}% in the last hour. Momentum is strong but entering now means buying at the peak of excitement — the highest-risk moment. If you enter, keep position very small.` };
+
+    // Dump ativo
+    if (isDumping && score < 55)
+      return { emoji: '📉', label: 'ACTIVE DUMP', color: '#ef4444',
+        text: `Token down ${Math.abs(pc24h).toFixed(0)}% in 24h with a below-average risk score. Whales are likely exiting. Do not try to catch this knife.` };
+
+    // Token saudável e entrando cedo
+    if (score >= 70 && isFreshToken && isBullish && !isPumpedOut)
+      return { emoji: '🌱', label: 'EARLY GEM?', color: '#22c55e',
+        text: `Strong fundamentals for a young token. Healthy liquidity, real buy pressure, and low concentration. If the narrative holds, this could have significant upside. Entry risk is still elevated due to age — size accordingly.` };
+
+    // Token estabelecido e sólido
+    if (score >= 75 && !isFreshToken && hasFullSocial && !isPumpedOut)
+      return { emoji: '✅', label: 'SOLID PROJECT', color: '#22c55e',
+        text: `One of the better-looking tokens analyzed today. Good distribution, established presence, and no major red flags. Still do your own research — no memecoin is truly safe.` };
+
+    // Narrativa quente mas token fraco
+    if (narrativeHot && score < 50)
+      return { emoji: '🎭', label: 'HOT NARRATIVE, WEAK TOKEN', color: '#f59e0b',
+        text: `The ${t.narrative?.label} narrative is hot right now — but this specific token has too many red flags to ride it safely. Find a better entry point in the same meta.` };
+
+    // Narrativa fria
+    if (narrativeCold && score < 60)
+      return { emoji: '❄️', label: 'WRONG TIMING', color: '#64748b',
+        text: `${t.narrative?.label} narrative is cold right now. Even if the token looks decent, you are swimming against the market current. Capital is flowing elsewhere.` };
+
+    // Médio — precisa de mais dados
+    if (score >= 55 && score < 70)
+      return { emoji: '🟡', label: 'PROCEED WITH CAUTION', color: '#f59e0b',
+        text: `Moderate risk profile. Some green flags but enough concerns to keep position size small. If you enter, set a clear stop-loss and do not oversize.` };
+
+    if (score >= 40 && score < 55)
+      return { emoji: '🔴', label: 'HIGH RISK', color: '#ef4444',
+        text: `More red flags than green. This could work out, but the odds are not in your favor. If you still want exposure, keep it under 0.1 SOL and be ready to exit fast.` };
+
+    // Fallback
+    return { emoji: '⚠️', label: 'RISKY', color: '#f59e0b',
+      text: 'Multiple risk factors present. Approach with caution and small position size only.' };
   };
 
   const analyzeToken = async (overrideAddress) => {
@@ -6502,6 +6704,9 @@ function HelmApp() {
           else if (finalScore <= 25) { riskScore -= 10; redFlags.push(`❄️ Narrative "${narrative.label}" is cold — weak market interest`); }
           tokenData.riskScore = Math.max(0, Math.min(100, riskScore));
         }
+
+        // ── HELM SAYS — veredicto automático ──
+        tokenData.verdict = generateVerdict(tokenData);
 
         setAnalysis(tokenData);
         showToast('Token analyzed!', 'success');
@@ -7511,7 +7716,30 @@ function HelmApp() {
         color: 'var(--text-secondary)'
       }
     }, "\xB7 ", n.votes)))));
-  })(), /*#__PURE__*/React.createElement("div", {
+  })(),
+
+  // ── TICKER ──
+  tickerTokens.length > 0 && React.createElement("div", {
+    style: {overflow:'hidden', background:'rgba(0,0,0,0.5)', borderBottom:'1px solid rgba(255,255,255,0.07)', height:'34px', display:'flex', alignItems:'center'}
+  },
+    React.createElement.apply(React, ["div", {
+      style: {display:'flex', flexDirection:'row', flexWrap:'nowrap', alignItems:'center', whiteSpace:'nowrap', animation:'ticker-scroll 35s linear infinite', willChange:'transform'}
+    }].concat(
+      [...tickerTokens, ...tickerTokens].map(function(t, i) {
+        var pc = t.pc24h || 0;
+        return React.createElement("div", {
+          key: i,
+          onClick: function() { setActiveTab("analysis"); setTokenAddress(t.tokenAddress); setTimeout(function(){ analyzeToken(t.tokenAddress); },200); },
+          style: {display:'inline-flex', flexShrink:0, alignItems:'center', gap:'5px', padding:'0 16px', fontSize:'0.8rem', fontWeight:600, borderRight:'1px solid rgba(255,255,255,0.07)', cursor:'pointer', height:'34px', whiteSpace:'nowrap'}
+        },
+          React.createElement("span", {style:{fontWeight:800, color:'#e2e8f0'}}, "$"+(t.symbol||"???")),
+          React.createElement("span", {style:{color:pc>=0?"#22c55e":"#ef4444", fontSize:'0.75rem'}}, (pc>=0?"+":"")+pc.toFixed(1)+"%")
+        );
+      })
+    ))
+  ),
+
+  /*#__PURE__*/React.createElement("div", {
     className: "container"
   }, /*#__PURE__*/React.createElement("div", {
     className: "tabs",
@@ -7520,6 +7748,10 @@ function HelmApp() {
     className: `tab ${activeTab === 'profile' ? 'active' : ''}`,
     onClick: () => setActiveTab('profile')
   }, "\uD83D\uDC64 Profile"), /*#__PURE__*/React.createElement("div", {
+    className: `tab ${activeTab === 'trending' ? 'active' : ''}`,
+    onClick: () => setActiveTab('trending'),
+    style: {background: activeTab === 'trending' ? 'rgba(239,68,68,0.2)' : '', color: activeTab === 'trending' ? '#ef4444' : ''}
+  }, "\uD83D\uDD25 Trending"), /*#__PURE__*/React.createElement("div", {
     id: "helm-analysis-tab",
     className: `tab ${activeTab === 'analysis' ? 'active' : ''}`,
     onClick: () => setActiveTab('analysis')
@@ -8374,7 +8606,39 @@ function HelmApp() {
       border: `1px solid ${analysis.riskLevel === 'low' ? 'var(--success)' : analysis.riskLevel === 'medium' ? 'var(--warning)' : 'var(--danger)'}`,
       color: analysis.riskLevel === 'low' ? 'var(--success)' : analysis.riskLevel === 'medium' ? 'var(--warning)' : 'var(--danger)'
     }
-  }, analysis.riskLevel === 'low' && '✅ LOW RISK', analysis.riskLevel === 'medium' && '⚡ MEDIUM RISK', analysis.riskLevel === 'high' && '🚨 HIGH RISK', analysis.riskLevel === 'extreme' && '☠️ EXTREME', ' ', "\xB7 ", analysis.riskScore, "/100")), /*#__PURE__*/React.createElement("div", {
+  }, analysis.riskLevel === 'low' && '✅ LOW RISK', analysis.riskLevel === 'medium' && '⚡ MEDIUM RISK', analysis.riskLevel === 'high' && '🚨 HIGH RISK', analysis.riskLevel === 'extreme' && '☠️ EXTREME', ' ', "\xB7 ", analysis.riskScore, "/100")),
+
+  // ── HELM SAYS CARD ──
+  analysis.verdict && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '16px',
+      borderRadius: '14px',
+      border: '1px solid ' + analysis.verdict.color + '44',
+      background: analysis.verdict.color + '0d',
+      overflow: 'hidden',
+    }
+  },
+    /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: '10px 16px',
+        background: analysis.verdict.color + '18',
+        borderBottom: '1px solid ' + analysis.verdict.color + '33',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+      }
+    },
+      /*#__PURE__*/React.createElement("span", { style: { fontSize: '1.1rem' } }, analysis.verdict.emoji),
+      /*#__PURE__*/React.createElement("span", {
+        style: { fontWeight: '900', fontSize: '0.78rem', letterSpacing: '1.5px', color: analysis.verdict.color, textTransform: 'uppercase' }
+      }, "HELM SAYS · ", analysis.verdict.label)
+    ),
+    /*#__PURE__*/React.createElement("div", {
+      style: { padding: '14px 16px', fontSize: '0.88rem', color: 'var(--text-primary)', lineHeight: '1.6' }
+    }, analysis.verdict.text)
+  ),
+
+  /*#__PURE__*/React.createElement("div", {
     className: "stat-grid",
     style: {
       marginTop: '16px'
@@ -10071,6 +10335,65 @@ React.createElement("div",{key:"HTX / OKX fd",className:"u-card-inner"},
     }
   }, "Click outside to close"))),
 
+  /* ── TRENDING TAB ── */
+  activeTab === 'trending' && React.createElement("div", {
+    className: "container", style: {paddingTop:'16px', paddingBottom:'80px'}
+  },
+    React.createElement("div", {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'14px'}},
+      React.createElement("div", null,
+        React.createElement("h2", {style:{margin:0,fontSize:'1.2rem'}}, "\uD83D\uDD25 Trending on Solana"),
+        React.createElement("p", {style:{margin:'3px 0 0',fontSize:'0.8rem',color:'var(--text-secondary)'}}, "Tap any token to analyze instantly")
+      ),
+      React.createElement("button", {
+        onClick: () => { setTrendingLoaded(false); loadTrendingTab(); },
+        style: {background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:'8px',padding:'7px 12px',fontSize:'0.8rem',cursor:'pointer',color:'var(--text-primary)'}
+      }, trendingLoading ? "Loading..." : "\uD83D\uDD04 Refresh")
+    ),
+    trendingLoading && React.createElement("div", {style:{textAlign:'center',padding:'50px 0',color:'var(--text-secondary)'}},
+      React.createElement("div", {style:{fontSize:'2rem',marginBottom:'8px'}}, "\uD83D\uDD25"),
+      React.createElement("p", null, "Loading trending tokens...")
+    ),
+    !trendingLoading && trendingList.map(function(token, idx) {
+      var pc = token.pc24h || 0;
+      var pcColor = pc >= 20 ? '#22c55e' : pc > 0 ? '#86efac' : pc <= -20 ? '#ef4444' : '#fca5a5';
+      var fmt = function(n){ if(!n)return '-'; if(n>=1e6)return '$'+(n/1e6).toFixed(1)+'M'; if(n>=1000)return '$'+(n/1000).toFixed(0)+'k'; return '$'+n.toFixed(0); };
+      var medals = ['\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49'];
+      var mColors = ['#f59e0b','#94a3b8','#b45309'];
+      return React.createElement("div", {
+        key: token.tokenAddress||idx,
+        onClick: function(){ setActiveTab('analysis'); setTokenAddress(token.tokenAddress); setTimeout(function(){ analyzeToken(token.tokenAddress); }, 200); },
+        style: {background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:'14px',padding:'13px 14px',marginBottom:'8px',cursor:'pointer',display:'flex',alignItems:'center',gap:'12px'},
+        onMouseEnter: function(e){ e.currentTarget.style.borderColor='rgba(99,102,241,0.5)'; },
+        onMouseLeave: function(e){ e.currentTarget.style.borderColor='var(--border)'; },
+      },
+        React.createElement("div", {style:{width:'28px',textAlign:'center',fontWeight:'900',fontSize:'0.85rem',color:idx<3?mColors[idx]:'var(--text-secondary)',flexShrink:0}},
+          idx<3 ? medals[idx] : '#'+(idx+1)
+        ),
+        React.createElement("div", {style:{flex:1,minWidth:0}},
+          React.createElement("div", {style:{display:'flex',alignItems:'center',gap:'7px',marginBottom:'4px',flexWrap:'wrap'}},
+            React.createElement("span", {style:{fontWeight:'800',fontSize:'0.95rem'}}, '$'+(token.symbol||'???')),
+            React.createElement("span", {style:{fontSize:'0.78rem',color:'var(--text-secondary)',maxWidth:'130px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}, token.name||''),
+            token.narrative && React.createElement("span", {style:{fontSize:'0.67rem',padding:'1px 6px',borderRadius:'6px',border:'1px solid '+token.narrative.color+'44',color:token.narrative.color,background:token.narrative.color+'18',flexShrink:0}},
+              token.narrative.emoji+' '+token.narrative.label)
+          ),
+          React.createElement("div", {style:{display:'flex',gap:'10px',fontSize:'0.74rem',color:'var(--text-secondary)'}},
+            React.createElement("span", null, "MC ", React.createElement("strong",{style:{color:'var(--text-primary)'}}, fmt(token.mc))),
+            React.createElement("span", null, "Liq ", React.createElement("strong",{style:{color:'var(--text-primary)'}}, fmt(token.liq))),
+            React.createElement("span", null, "Vol ", React.createElement("strong",{style:{color:'var(--text-primary)'}}, fmt(token.vol24h)))
+          )
+        ),
+        React.createElement("div", {style:{textAlign:'right',flexShrink:0}},
+          React.createElement("div", {style:{fontWeight:'800',fontSize:'0.9rem',color:pcColor}}, (pc>=0?'+':'')+pc.toFixed(1)+'%'),
+          React.createElement("div", {style:{fontSize:'0.65rem',color:'var(--text-secondary)',marginTop:'2px'}}, "24h"),
+          React.createElement("div", {style:{fontSize:'0.7rem',color:'var(--accent)',marginTop:'5px',fontWeight:'700'}}, "\uD83D\uDD0D Analyze")
+        )
+      );
+    }),
+    !trendingLoading && trendingList.length===0 && trendingLoaded && React.createElement("div", {style:{textAlign:'center',padding:'50px 0',color:'var(--text-secondary)'}},
+      React.createElement("p", null, "No trending tokens found. Try refreshing.")
+    )
+  ),
+
   /* ── AI COACH FAB + PANEL ── */
   user && React.createElement(React.Fragment, null,
     React.createElement("button", {
@@ -10123,6 +10446,7 @@ React.createElement("div",{key:"HTX / OKX fd",className:"u-card-inner"},
       )
     )
   ));
+
 }
 ReactDOM.render(
   /*#__PURE__*/React.createElement(AuthWrapper, null,
